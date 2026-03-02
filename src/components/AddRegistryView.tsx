@@ -98,7 +98,56 @@ export default function AddRegistryView({ type, mode, initialData, onBack, onSav
     terapiLain: '',
     tindakanOperatif: 'Tidak Ada',
     
-    notes: ''
+    notes: '',
+
+    // UVEITIS SPECIFIC FIELDS
+    // Step 1: Klinis
+    uvTanggalPeriksa: new Date().toISOString().split('T')[0],
+    uvTanggalKunjunganPertama: '',
+    uvUnitPoli: '',
+    uvDiagnosisInisial: '',
+    uvOdUcva: '', uvOdUcvaDec: '', uvOdBcva: '', uvOdBcvaDec: '', uvOdTio: '',
+    uvOsUcva: '', uvOsUcvaDec: '', uvOsBcva: '', uvOsBcvaDec: '', uvOsTio: '',
+    uvOdPalpebra: 'Tenang', uvOdPalpebraKet: '',
+    uvOdKonjungtiva: 'Tenang', uvOdKonjungtivaKet: '',
+    uvOdKornea: 'Tenang', uvOdKorneaKet: '',
+    uvOdCoaSel: 'Negatif', uvOdCoaFlare: 'Negatif', uvOdCoaFlareKet: '', uvOdCoaVh: '< 3',
+    uvOdIris: 'Tenang',
+    uvOdLensa: 'Tenang', uvOdLensaKet: '',
+    uvOdVitHaze: 'Negatif', uvOdVitSel: 'Negatif', uvOdVitStrand: 'Negatif',
+    uvOdRetinaCd: '', uvOdRetinaAv: '',
+    uvOdRetinaTenang: false, uvOdRetinaVasc: false, uvOdRetinaInfiltrat: false, uvOdRetinaScar: false, uvOdRetinaLain: '',
+    uvOsPalpebra: 'Tenang', uvOsPalpebraKet: '',
+    uvOsKonjungtiva: 'Tenang', uvOsKonjungtivaKet: '',
+    uvOsKornea: 'Tenang', uvOsKorneaKet: '',
+    uvOsCoaSel: 'Negatif', uvOsCoaFlare: 'Negatif', uvOsCoaFlareKet: '', uvOsCoaVh: '< 3',
+    uvOsIris: 'Tenang',
+    uvOsLensa: 'Tenang', uvOsLensaKet: '',
+    uvOsVitHaze: 'Negatif', uvOsVitSel: 'Negatif', uvOsVitStrand: 'Negatif',
+    uvOsRetinaCd: '', uvOsRetinaAv: '',
+    uvOsRetinaTenang: false, uvOsRetinaVasc: false, uvOsRetinaInfiltrat: false, uvOsRetinaScar: false, uvOsRetinaLain: '',
+    // Step 2: Pencitraan
+    uvOptos: 'no', uvFfa: 'no',
+    // Step 3: Diagnosis
+    uvOdLokasiAnatomi: '', uvOsLokasiAnatomi: '', uvCourse: '', uvDiagnosisLengkap: '',
+    // Step 4: Lab
+    uvMantoux: 'Non Reaktif', uvMantouxVal: '', uvIgra: 'Negatif',
+    uvLed: '', uvCrp: '', uvThorax: 'Normal', uvThoraxKet: '',
+    uvRpr: 'Non Reaktif', uvRprTiter: '', uvTpha: 'Non Reaktif', uvTphaTiter: '',
+    uvHiv: 'Non Reaktif', uvCd4: '', uvCd8: '', uvPcrAkuous: '', uvVitrektomiDiag: '',
+    uvHlaB27: 'Negatif', uvAna: 'Negatif',
+    uvIggTokso: 'Non Reaktif', uvIggToksoTiter: '', uvIgmTokso: 'Non Reaktif', uvIgmToksoTiter: '',
+    uvDsdna: 'Negatif', uvAnca: 'Negatif', uvCtThorax: 'Normal', uvCtThoraxKet: '',
+    uvKulturVit: '', uvPcrVit: '', uvLabLain2: '',
+    uvCrypto: 'Non Reaktif', uvPgl1: '', uvBiopsiSaliva: '', uvBronkoskopi: '', uvBal: '', uvPet: '', uvGa: '', uvLumbal: '', uvMri: '',
+    // Step 5: Terapi
+    uvTxSistemikKortiko: '', uvTxSistemikImuno: '', uvTxSistemikAnti: '',
+    uvTxTopikalSteroid: '', uvTxTopikalSiklo: '', uvTxTopikalTio: '',
+    uvSurgKatarak: false, uvSurgKatarakDate: '', uvSurgTrab: false, uvSurgTrabDate: '',
+    uvSurgPpv: false, uvSurgPpvDate: '', uvSurgIvt: false, uvSurgIvtDate: '',
+    uvSurgRd: false, uvSurgRdDate: '', uvSurgLaser: false, uvSurgLaserDate: '',
+    uvKompOdKatarak: false, uvKompOdGlaukoma: false, uvKompOdBand: false, uvKompOdCme: false, uvKompOdErm: false, uvKompOdRd: false,
+    uvKompOsKatarak: false, uvKompOsGlaukoma: false, uvKompOsBand: false, uvKompOsCme: false, uvKompOsErm: false, uvKompOsRd: false,
   });
 
   const [previews, setPreviews] = useState<string[]>([]);
@@ -128,6 +177,7 @@ export default function AddRegistryView({ type, mode, initialData, onBack, onSav
   const registryType = type === 'all' ? 'Umum' : type;
   const isReadOnly = mode === 'view';
   const isUlkus = registryType === 'Ulkus';
+  const isUveitis = registryType === 'Uveitis';
 
   const typeColors = {
     'Uveitis': { text: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100', btn: 'bg-emerald-600 hover:bg-emerald-700', shadow: 'shadow-emerald-200' },
@@ -180,6 +230,44 @@ export default function AddRegistryView({ type, mode, initialData, onBack, onSav
           { step: 2, label: 'Fisik', icon: <ScanEye className="w-4 h-4" /> },
           { step: 3, label: 'Mikro', icon: <Microscope className="w-4 h-4" /> },
           { step: 4, label: 'Terapi', icon: <Pill className="w-4 h-4" /> },
+        ].map((s) => (
+          <div 
+            key={s.step}
+            className="flex flex-col items-center relative z-10 cursor-pointer group"
+            onClick={() => setCurrentStep(s.step)}
+          >
+            <div className={cn(
+              "w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all border-2",
+              currentStep === s.step ? cn(colors.btn.split(' ')[0], "text-white border-transparent scale-110 shadow-lg") : 
+              currentStep > s.step ? "bg-emerald-500 text-white border-emerald-500" : "bg-white text-slate-400 border-slate-200"
+            )}>
+              {currentStep > s.step ? <Check className="w-5 h-5" /> : s.icon}
+            </div>
+            <span className={cn(
+              "text-[10px] font-bold mt-2 uppercase tracking-wider",
+              currentStep === s.step ? colors.text : "text-slate-400"
+            )}>{s.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderUveitisStepper = () => (
+    <div className={cn("px-8 py-6 border-b border-slate-200 mb-8 rounded-xl", colors.bg)}>
+      <div className="flex items-center justify-between max-w-4xl mx-auto relative">
+        <div className="absolute top-5 left-0 w-full h-1 bg-slate-200 -z-0 rounded-full"></div>
+        <div 
+          className={cn("absolute top-5 left-0 h-1 transition-all duration-300 -z-0 rounded-full", colors.btn.split(' ')[0])} 
+          style={{ width: `${((currentStep - 1) / 4) * 100}%` }}
+        ></div>
+        
+        {[
+          { step: 1, label: 'Klinis', icon: <Activity className="w-4 h-4" /> },
+          { step: 2, label: 'Pencitraan', icon: <Camera className="w-4 h-4" /> },
+          { step: 3, label: 'Diagnosis', icon: <FileText className="w-4 h-4" /> },
+          { step: 4, label: 'Lab', icon: <Microscope className="w-4 h-4" /> },
+          { step: 5, label: 'Terapi', icon: <Pill className="w-4 h-4" /> },
         ].map((s) => (
           <div 
             key={s.step}
@@ -564,7 +652,7 @@ export default function AddRegistryView({ type, mode, initialData, onBack, onSav
                   {previews.length > 0 && (
                     <div className="flex flex-wrap gap-4 mt-6">
                       {previews.map((src, idx) => (
-                        <div key={idx} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-slate-200">
+                        <div key={`img-${idx}`} className="relative group w-24 h-24 rounded-xl overflow-hidden border border-slate-200">
                           <img src={src} alt="Preview" className="w-full h-full object-cover" />
                           {!isReadOnly && (
                             <button 
@@ -794,6 +882,339 @@ export default function AddRegistryView({ type, mode, initialData, onBack, onSav
               
               <div className="flex gap-3">
                 {currentStep < 4 ? (
+                  <button 
+                    type="button" 
+                    onClick={() => setCurrentStep(currentStep + 1)} 
+                    className={cn("px-8 py-2.5 text-white rounded-xl font-bold text-sm shadow-lg transition-all", colors.btn, colors.shadow)}
+                  >
+                    Selanjutnya
+                  </button>
+                ) : (
+                  !isReadOnly && (
+                    <button type="submit" className="px-8 py-2.5 bg-emerald-600 text-white rounded-xl font-bold text-sm hover:bg-emerald-700 shadow-lg shadow-emerald-200 transition-all flex items-center gap-2">
+                      <Save className="w-4 h-4" /> Simpan Data
+                    </button>
+                  )
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  if (isUveitis) {
+    return (
+      <div className="fade-in">
+        <div className="mb-6 flex items-center gap-4">
+          <button onClick={onBack} className="p-2 bg-white border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
+            <ArrowLeft className="w-5 h-5 text-slate-600" />
+          </button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 font-display">{title}</h1>
+            <p className="text-slate-500 mt-1">{subtitle} untuk <span className={cn("font-bold", colors.text)}>{registryType}</span></p>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-2xl shadow-card border border-slate-200 overflow-hidden">
+          {renderUveitisStepper()}
+          
+          <form onSubmit={handleSubmit} className="p-8 pt-0">
+            {/* STEP 1: KLINIS */}
+            {currentStep === 1 && (
+              <div className="animate-scale-in">
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className={cn("text-lg font-bold text-slate-800 border-l-4 pl-3", colors.text.replace('text-', 'border-'))}>Identitas & Anamnesis</h3>
+                  <div className={cn("text-xs px-3 py-1.5 rounded-lg border font-bold", colors.text, colors.bg, colors.border)}>
+                    Tgl: {new Date().toLocaleDateString('id-ID')}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tanggal Pemeriksaan <span className="text-red-500">*</span></label>
+                    <input type="date" className="input-minimal" value={formData.uvTanggalPeriksa} onChange={e => setFormData({...formData, uvTanggalPeriksa: e.target.value})} disabled={isReadOnly} required />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Tanggal Kunjungan Pertama</label>
+                    <input type="date" className="input-minimal" value={formData.uvTanggalKunjunganPertama} onChange={e => setFormData({...formData, uvTanggalKunjunganPertama: e.target.value})} disabled={isReadOnly} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Unit / Poli <span className="text-red-500">*</span></label>
+                    <select className="input-minimal" value={formData.uvUnitPoli} onChange={e => setFormData({...formData, uvUnitPoli: e.target.value})} disabled={isReadOnly} required>
+                      <option value="">Pilih Unit...</option>
+                      <option>Umum</option>
+                      <option>Infeksi & Imunologi</option>
+                      <option>Kornea</option>
+                      <option>IGD</option>
+                      <option>Rawat Inap</option>
+                      <option>Lainnya</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Diagnosis Inisial <span className="text-red-500">*</span></label>
+                    <input type="text" className="input-minimal" placeholder="Contoh: Uveitis Anterior OD" value={formData.uvDiagnosisInisial} onChange={e => setFormData({...formData, uvDiagnosisInisial: e.target.value})} disabled={isReadOnly} required />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Keluhan Utama <span className="text-red-500">*</span></label>
+                    <textarea className="input-minimal" rows={3} placeholder="Jelaskan keluhan utama..." value={formData.keluhanUtama} onChange={e => setFormData({...formData, keluhanUtama: e.target.value})} disabled={isReadOnly} required></textarea>
+                  </div>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Suku Bangsa</label>
+                      <input type="text" className="input-minimal" placeholder="Contoh: Jawa, Sunda..." value={formData.suku} onChange={e => setFormData({...formData, suku: e.target.value})} disabled={isReadOnly} />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Pekerjaan</label>
+                      <input type="text" className="input-minimal" placeholder="Contoh: Petani, Buruh..." value={formData.job} onChange={e => setFormData({...formData, job: e.target.value})} disabled={isReadOnly} />
+                    </div>
+                  </div>
+                </div>
+
+                <h3 className={cn("text-lg font-bold text-slate-800 mb-6 border-l-4 pl-3 mt-8", colors.text.replace('text-', 'border-'))}>Pemeriksaan Fisik</h3>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+                  {/* OD */}
+                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div className="text-center font-bold text-blue-700 mb-4 pb-2 border-b border-blue-100">OD (Kanan)</div>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Visus (UCVA)</label>
+                          <div className="flex gap-2">
+                            <input type="text" className="input-minimal bg-white" placeholder="6/..." value={formData.uvOdUcva} onChange={e => setFormData({...formData, uvOdUcva: e.target.value, uvOdUcvaDec: convertSnellen(e.target.value)})} disabled={isReadOnly} />
+                            <input type="text" className="input-minimal bg-slate-100 w-16 text-center text-[10px]" placeholder="Dec" value={formData.uvOdUcvaDec} readOnly />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Visus (BCVA)</label>
+                          <div className="flex gap-2">
+                            <input type="text" className="input-minimal bg-white" placeholder="6/..." value={formData.uvOdBcva} onChange={e => setFormData({...formData, uvOdBcva: e.target.value, uvOdBcvaDec: convertSnellen(e.target.value)})} disabled={isReadOnly} />
+                            <input type="text" className="input-minimal bg-slate-100 w-16 text-center text-[10px]" placeholder="Dec" value={formData.uvOdBcvaDec} readOnly />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">TIO (mmHg)</label>
+                        <input type="number" className="input-minimal bg-white" placeholder="0" value={formData.uvOdTio} onChange={e => setFormData({...formData, uvOdTio: e.target.value})} disabled={isReadOnly} />
+                      </div>
+                      
+                      <div className="pt-4 border-t border-slate-200">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">COA</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdCoaSel} onChange={e => setFormData({...formData, uvOdCoaSel: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Sel: Negatif</option><option value="0.5+">Sel: 0.5+</option><option value="1+">Sel: 1+</option><option value="2+">Sel: 2+</option><option value="3+">Sel: 3+</option><option value="4+">Sel: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdCoaFlare} onChange={e => setFormData({...formData, uvOdCoaFlare: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Flare: Negatif</option><option value="1+">Flare: 1+</option><option value="2+">Flare: 2+</option><option value="3+">Flare: 3+</option><option value="4+">Flare: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdCoaVh} onChange={e => setFormData({...formData, uvOdCoaVh: e.target.value})} disabled={isReadOnly}>
+                            <option value="< 3">VH: &lt; 3</option><option value="3-4">VH: 3-4</option><option value="> 4">VH: &gt; 4</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-200">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Vitreous</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdVitHaze} onChange={e => setFormData({...formData, uvOdVitHaze: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Haze: Negatif</option><option value="0.5+">Haze: 0.5+</option><option value="1+">Haze: 1+</option><option value="2+">Haze: 2+</option><option value="3+">Haze: 3+</option><option value="4+">Haze: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdVitSel} onChange={e => setFormData({...formData, uvOdVitSel: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Sel: Negatif</option><option value="0.5+">Sel: 0.5+</option><option value="1+">Sel: 1+</option><option value="2+">Sel: 2+</option><option value="3+">Sel: 3+</option><option value="4+">Sel: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOdVitStrand} onChange={e => setFormData({...formData, uvOdVitStrand: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Strand: Negatif</option><option value="Positif">Strand: Positif</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* OS */}
+                  <div className="p-6 bg-slate-50 rounded-2xl border border-slate-200">
+                    <div className="text-center font-bold text-emerald-700 mb-4 pb-2 border-b border-emerald-100">OS (Kiri)</div>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Visus (UCVA)</label>
+                          <div className="flex gap-2">
+                            <input type="text" className="input-minimal bg-white" placeholder="6/..." value={formData.uvOsUcva} onChange={e => setFormData({...formData, uvOsUcva: e.target.value, uvOsUcvaDec: convertSnellen(e.target.value)})} disabled={isReadOnly} />
+                            <input type="text" className="input-minimal bg-slate-100 w-16 text-center text-[10px]" placeholder="Dec" value={formData.uvOsUcvaDec} readOnly />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Visus (BCVA)</label>
+                          <div className="flex gap-2">
+                            <input type="text" className="input-minimal bg-white" placeholder="6/..." value={formData.uvOsBcva} onChange={e => setFormData({...formData, uvOsBcva: e.target.value, uvOsBcvaDec: convertSnellen(e.target.value)})} disabled={isReadOnly} />
+                            <input type="text" className="input-minimal bg-slate-100 w-16 text-center text-[10px]" placeholder="Dec" value={formData.uvOsBcvaDec} readOnly />
+                          </div>
+                        </div>
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">TIO (mmHg)</label>
+                        <input type="number" className="input-minimal bg-white" placeholder="0" value={formData.uvOsTio} onChange={e => setFormData({...formData, uvOsTio: e.target.value})} disabled={isReadOnly} />
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-200">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">COA</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsCoaSel} onChange={e => setFormData({...formData, uvOsCoaSel: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Sel: Negatif</option><option value="0.5+">Sel: 0.5+</option><option value="1+">Sel: 1+</option><option value="2+">Sel: 2+</option><option value="3+">Sel: 3+</option><option value="4+">Sel: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsCoaFlare} onChange={e => setFormData({...formData, uvOsCoaFlare: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Flare: Negatif</option><option value="1+">Flare: 1+</option><option value="2+">Flare: 2+</option><option value="3+">Flare: 3+</option><option value="4+">Flare: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsCoaVh} onChange={e => setFormData({...formData, uvOsCoaVh: e.target.value})} disabled={isReadOnly}>
+                            <option value="< 3">VH: &lt; 3</option><option value="3-4">VH: 3-4</option><option value="> 4">VH: &gt; 4</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      <div className="pt-4 border-t border-slate-200">
+                        <label className="block text-[10px] font-bold text-slate-400 uppercase mb-1">Vitreous</label>
+                        <div className="grid grid-cols-3 gap-2">
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsVitHaze} onChange={e => setFormData({...formData, uvOsVitHaze: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Haze: Negatif</option><option value="0.5+">Haze: 0.5+</option><option value="1+">Haze: 1+</option><option value="2+">Haze: 2+</option><option value="3+">Haze: 3+</option><option value="4+">Haze: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsVitSel} onChange={e => setFormData({...formData, uvOsVitSel: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Sel: Negatif</option><option value="0.5+">Sel: 0.5+</option><option value="1+">Sel: 1+</option><option value="2+">Sel: 2+</option><option value="3+">Sel: 3+</option><option value="4+">Sel: 4+</option>
+                          </select>
+                          <select className="input-minimal bg-white text-[10px]" value={formData.uvOsVitStrand} onChange={e => setFormData({...formData, uvOsVitStrand: e.target.value})} disabled={isReadOnly}>
+                            <option value="Negatif">Strand: Negatif</option><option value="Positif">Strand: Positif</option>
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 2: PENCITRAAN */}
+            {currentStep === 2 && (
+              <div className="animate-scale-in">
+                <h3 className={cn("text-lg font-bold text-slate-800 mb-6 border-l-4 pl-3", colors.text.replace('text-', 'border-'))}>Pencitraan</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Optos</label>
+                    <select className="input-minimal" value={formData.uvOptos} onChange={e => setFormData({...formData, uvOptos: e.target.value})} disabled={isReadOnly}>
+                      <option value="no">Tidak Dilakukan</option>
+                      <option value="yes">Dilakukan</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">FFA</label>
+                    <select className="input-minimal" value={formData.uvFfa} onChange={e => setFormData({...formData, uvFfa: e.target.value})} disabled={isReadOnly}>
+                      <option value="no">Tidak Dilakukan</option>
+                      <option value="yes">Dilakukan</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 3: DIAGNOSIS */}
+            {currentStep === 3 && (
+              <div className="animate-scale-in">
+                <h3 className={cn("text-lg font-bold text-slate-800 mb-6 border-l-4 pl-3", colors.text.replace('text-', 'border-'))}>Diagnosis</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Lokasi Anatomi OD</label>
+                    <select className="input-minimal" value={formData.uvOdLokasiAnatomi} onChange={e => setFormData({...formData, uvOdLokasiAnatomi: e.target.value})} disabled={isReadOnly}>
+                      <option value="">Pilih Lokasi...</option>
+                      <option>Anterior</option>
+                      <option>Intermediate</option>
+                      <option>Posterior</option>
+                      <option>Panuveitis</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Lokasi Anatomi OS</label>
+                    <select className="input-minimal" value={formData.uvOsLokasiAnatomi} onChange={e => setFormData({...formData, uvOsLokasiAnatomi: e.target.value})} disabled={isReadOnly}>
+                      <option value="">Pilih Lokasi...</option>
+                      <option>Anterior</option>
+                      <option>Intermediate</option>
+                      <option>Posterior</option>
+                      <option>Panuveitis</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Course</label>
+                    <select className="input-minimal" value={formData.uvCourse} onChange={e => setFormData({...formData, uvCourse: e.target.value})} disabled={isReadOnly}>
+                      <option value="">Pilih Course...</option>
+                      <option>Akut</option>
+                      <option>Kronis</option>
+                      <option>Rekuren</option>
+                    </select>
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Diagnosis Lengkap</label>
+                    <textarea className="input-minimal" rows={3} placeholder="Diagnosis lengkap..." value={formData.uvDiagnosisLengkap} onChange={e => setFormData({...formData, uvDiagnosisLengkap: e.target.value})} disabled={isReadOnly}></textarea>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 4: LAB */}
+            {currentStep === 4 && (
+              <div className="animate-scale-in">
+                <h3 className={cn("text-lg font-bold text-slate-800 mb-6 border-l-4 pl-3", colors.text.replace('text-', 'border-'))}>Laboratorium & Penunjang</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Mantoux</label>
+                    <select className="input-minimal" value={formData.uvMantoux} onChange={e => setFormData({...formData, uvMantoux: e.target.value})} disabled={isReadOnly}>
+                      <option>Non Reaktif</option>
+                      <option>Reaktif</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">IGRA</label>
+                    <select className="input-minimal" value={formData.uvIgra} onChange={e => setFormData({...formData, uvIgra: e.target.value})} disabled={isReadOnly}>
+                      <option>Negatif</option>
+                      <option>Positif</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">LED</label>
+                    <input type="text" className="input-minimal" placeholder="Nilai LED..." value={formData.uvLed} onChange={e => setFormData({...formData, uvLed: e.target.value})} disabled={isReadOnly} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* STEP 5: TERAPI */}
+            {currentStep === 5 && (
+              <div className="animate-scale-in">
+                <h3 className={cn("text-lg font-bold text-slate-800 mb-6 border-l-4 pl-3", colors.text.replace('text-', 'border-'))}>Terapi</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Kortikosteroid Sistemik</label>
+                    <input type="text" className="input-minimal" placeholder="Nama obat & dosis..." value={formData.uvTxSistemikKortiko} onChange={e => setFormData({...formData, uvTxSistemikKortiko: e.target.value})} disabled={isReadOnly} />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-slate-500 uppercase mb-2">Imunosupresan Sistemik</label>
+                    <input type="text" className="input-minimal" placeholder="Nama obat & dosis..." value={formData.uvTxSistemikImuno} onChange={e => setFormData({...formData, uvTxSistemikImuno: e.target.value})} disabled={isReadOnly} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="flex justify-between mt-10 pt-6 border-t border-slate-100">
+              <button 
+                type="button" 
+                onClick={() => currentStep > 1 ? setCurrentStep(currentStep - 1) : onBack()} 
+                className="px-6 py-2.5 border border-slate-300 rounded-xl text-slate-600 font-bold text-sm hover:bg-slate-50 transition-all"
+              >
+                {currentStep === 1 ? (isReadOnly ? 'Tutup' : 'Batal') : 'Kembali'}
+              </button>
+              
+              <div className="flex gap-3">
+                {currentStep < 5 ? (
                   <button 
                     type="button" 
                     onClick={() => setCurrentStep(currentStep + 1)} 

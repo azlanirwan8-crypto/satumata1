@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import FaskesModal from './FaskesModal';
 import ClinicManagementView, { Clinic } from './ClinicManagementView';
 import EmployeeDirectoryView, { Employee } from './EmployeeDirectoryView';
-import EmployeeFormModal from './EmployeeFormModal';
+import EmployeeFormView from './EmployeeFormView';
 import UserManagementView, { SystemUser } from './UserManagementView';
 import CredentialingView from './CredentialingView';
 import MasterDataView from './MasterDataView';
@@ -14,7 +14,7 @@ interface SuperAdminDashboardProps {
 }
 
 interface Approval {
-  id: number;
+  id: string | number;
   type: string;
   typeColor: string;
   name: string;
@@ -38,10 +38,20 @@ interface UserLog {
   color: string;
 }
 
+export interface MasterItem {
+  id: string;
+  name: string;
+  code?: string;
+  description?: string;
+  status: 'Active' | 'Inactive';
+  meta?: any;
+}
+
 export default function SuperAdminDashboard({ onLogout, userName = 'Administrator' }: SuperAdminDashboardProps) {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeView, setActiveView] = useState<'dashboard' | 'clinic-management' | 'add-faskes' | 'employee-directory' | 'credentialing' | 'user-management' | 'master-data' | 'marketplace'>('dashboard');
   const [activeAddOns, setActiveAddOns] = useState<string[]>(['Integrasi SATUSEHAT']);
+  const [clinicStatusFilter, setClinicStatusFilter] = useState('Semua Status');
 
   const toggleAddOn = (title: string) => {
     setActiveAddOns(prev => 
@@ -56,125 +66,254 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
   const [clinics, setClinics] = useState<Clinic[]>([
     {
       id: 'c1',
-      name: 'Klinik Mata Sentosa A',
-      code: 'K-001',
+      name: 'Klinik Mata Nusantara',
+      code: 'K-00341',
       location: 'Jakarta Selatan, DKI Jakarta',
       type: 'Klinik Utama',
       contractStatus: 'Active',
       accountStatus: 'Verified',
-      lastActivity: '2 jam yang lalu'
+      lastActivity: '2 jam yang lalu',
+      expiryDate: '01 Jan 2026 - 01 Jan 2027',
+      branches: [
+        {
+          id: 'c1-b1',
+          name: 'KMN Cab. Depok',
+          code: 'K-00342',
+          location: 'Kota Depok, Jawa Barat',
+          type: 'Klinik Pratama',
+          contractStatus: 'Active',
+          accountStatus: 'Verified',
+          lastActivity: '1 jam yang lalu',
+          expiryDate: '01 Jan 2026 - 01 Jan 2027'
+        },
+        {
+          id: 'c1-b2',
+          name: 'KMN Cab. Bekasi',
+          code: 'K-00345',
+          location: 'Kota Bekasi, Jawa Barat',
+          type: 'Klinik Pratama',
+          contractStatus: 'Active',
+          accountStatus: 'Pending',
+          lastActivity: '3 jam yang lalu',
+          expiryDate: '-'
+        }
+      ]
     },
     {
       id: 'c2',
-      name: 'Klinik Mata Sentosa B',
-      code: 'K-002',
+      name: 'RS Mata Cemerlang',
+      code: 'K-00219',
       location: 'Bandung, Jawa Barat',
-      type: 'Klinik Utama',
+      type: 'RS Khusus Mata',
       contractStatus: 'Active',
       accountStatus: 'Verified',
-      lastActivity: '5 jam yang lalu'
+      lastActivity: '5 jam yang lalu',
+      expiryDate: '15 Mar 2025 - 15 Mar 2026'
+    },
+    {
+      id: 'c3',
+      name: 'Klinik Optik Sejahtera',
+      code: 'K-00401',
+      location: 'Surabaya, Jawa Timur',
+      type: 'Klinik Pratama',
+      contractStatus: 'Active',
+      accountStatus: 'Pending',
+      lastActivity: '1 hari yang lalu',
+      expiryDate: '-'
     }
   ]);
 
   const [employees, setEmployees] = useState<Employee[]>([
     {
       id: 'e1',
-      name: 'Dr. Ahmad, Sp.M',
-      nip: '198501012010011001',
-      profession: 'Dokter Spesialis Mata',
-      jobTitle: 'Dokter Spesialis',
-      category: 'medis',
+      name: 'Budi Santoso',
+      nip: '198001012000011001',
+      nik: '3171010101800001',
+      profession: 'Administrator',
+      jobTitle: 'Super Admin',
+      category: 'non-medis',
       status: 'Active',
-      img: 'AH',
-      email: 'dokter1@gmail.com',
+      img: 'BS',
+      email: 'superadmin@satumata.id',
       phone: '081234567890',
-      str: 'STR-12345',
-      strExp: '2028-12-31',
-      sip: 'SIP-12345',
-      sipExp: '2028-12-31',
       pob: 'Jakarta',
-      dob: '1985-01-01',
+      dob: '1980-01-01',
       gender: 'Laki-laki',
       religion: 'Islam',
       marital: 'Kawin',
-      ktpAddress: 'Jl. Melati No. 1, Jakarta',
-      address: 'Jl. Melati No. 1, Jakarta',
-      expertise: 'Katarak & Refraksi',
+      ktpAddress: 'Jl. Sudirman No. 1, Jakarta Pusat',
+      address: 'Jl. Sudirman No. 1, Jakarta Pusat',
+      expertise: 'Management',
       empStatus: 'Tetap',
-      expYears: '12',
-      npwp: '12.345.678.9-012.000',
-      emailPersonal: 'ahmad@personal.com'
+      expYears: '10',
+      npwp: '12.345.678.9-001.000',
+      emailPersonal: 'budi@personal.com',
+      password: 'password123',
+      roles: ['Super Admin'],
+      education: [{ level: 'S1', univ: 'Universitas Indonesia', year: '2002' }],
+      experience: [{ role: 'Admin Staff', instansi: 'RS Awal Bros', thn: '2003-2010' }],
+      gajiPokok: '15000000',
+      tunjanganTetap: '2000000',
+      tunjanganTidakTetap: '1000000',
+      bank: 'BCA',
+      noRek: '1234567890',
+      atasNama: 'Budi Santoso'
     },
     {
       id: 'e2',
-      name: 'Dr. Siti, Sp.M',
-      nip: '198805052015012002',
+      name: 'Dr. Handoko Sentosa, Sp.M',
+      nip: '198505052010011002',
+      nik: '3171020505850002',
       profession: 'Dokter Spesialis Mata',
       jobTitle: 'Dokter Spesialis',
       category: 'medis',
       status: 'Active',
-      img: 'SI',
-      email: 'dokter2@gmail.com',
+      img: 'HS',
+      email: 'dr.handoko@satumata.id',
       phone: '081298765432',
-      str: 'STR-67890',
-      strExp: '2027-06-30',
-      sip: 'SIP-67890',
-      sipExp: '2027-06-30',
-      pob: 'Bandung',
-      dob: '1988-05-05',
-      gender: 'Perempuan',
+      str: 'STR-123456',
+      strExp: '2028-12-31',
+      sip: 'SIP-123456',
+      sipExp: '2028-12-31',
+      pob: 'Surabaya',
+      dob: '1985-05-05',
+      gender: 'Laki-laki',
       religion: 'Islam',
       marital: 'Kawin',
-      ktpAddress: 'Jl. Mawar No. 5, Bandung',
-      address: 'Jl. Mawar No. 5, Bandung',
-      expertise: 'Glaukoma',
+      ktpAddress: 'Jl. Darmo No. 10, Surabaya',
+      address: 'Jl. Darmo No. 10, Surabaya',
+      expertise: 'Katarak',
       empStatus: 'Tetap',
-      expYears: '8',
-      npwp: '98.765.432.1-098.000',
-      emailPersonal: 'siti@personal.com'
+      expYears: '15',
+      npwp: '98.765.432.1-002.000',
+      emailPersonal: 'handoko@personal.com',
+      password: 'password123',
+      roles: ['Dokter Spesialis'],
+      education: [{ level: 'Sp.1', univ: 'Universitas Airlangga', year: '2012' }],
+      experience: [{ role: 'Dokter Umum', instansi: 'RSUD Dr. Soetomo', thn: '2010-2012' }],
+      rkk: [{ action: 'Operasi Katarak', category: 'Bedah', status: 'Mandiri Penuh' }],
+      schedule: {
+        'Senin': { active: true, slots: [{start: '08:00', end: '12:00'}] },
+        'Rabu': { active: true, slots: [{start: '13:00', end: '16:00'}] }
+      },
+      gajiPokok: '25000000',
+      tunjanganTetap: '5000000',
+      jasmedScheme: 'fee',
+      jasmedItems: [{ action: 'Konsultasi', qty: 100, rate: 50000 }],
+      bank: 'Mandiri',
+      noRek: '0987654321',
+      atasNama: 'Handoko Sentosa'
+    },
+    {
+      id: 'e3',
+      name: 'Siti Aminah',
+      nip: '199002022015012003',
+      nik: '3273020202900003',
+      profession: 'Administrasi Kesehatan',
+      jobTitle: 'Admin Faskes',
+      category: 'non-medis',
+      status: 'Active',
+      img: 'SA',
+      email: 'admin.faskes@satumata.id',
+      phone: '081345678901',
+      pob: 'Bandung',
+      dob: '1990-02-02',
+      gender: 'Perempuan',
+      religion: 'Islam',
+      marital: 'Belum Kawin',
+      ktpAddress: 'Jl. Dago No. 5, Bandung',
+      address: 'Jl. Dago No. 5, Bandung',
+      expertise: 'Administrasi',
+      empStatus: 'Tetap',
+      expYears: '5',
+      npwp: '11.222.333.4-003.000',
+      emailPersonal: 'siti@personal.com',
+      password: 'password123',
+      roles: ['Admin Faskes'],
+      education: [{ level: 'D3', univ: 'Poltekkes Bandung', year: '2011' }],
+      experience: [{ role: 'Resepsionis', instansi: 'Klinik Sehat', thn: '2012-2014' }],
+      gajiPokok: '5000000',
+      tunjanganTetap: '1000000',
+      bank: 'BNI',
+      noRek: '1122334455',
+      atasNama: 'Siti Aminah'
+    },
+    {
+      id: 'e4',
+      name: 'Rina Wati',
+      nip: '199503032018012004',
+      nik: '3471030303950004',
+      profession: 'Manajemen Cabang',
+      jobTitle: 'Kepala Cabang',
+      category: 'non-medis',
+      status: 'Active',
+      img: 'RW',
+      email: 'admin.cabang@satumata.id',
+      phone: '081567890123',
+      pob: 'Yogyakarta',
+      dob: '1995-03-03',
+      gender: 'Perempuan',
+      religion: 'Islam',
+      marital: 'Belum Kawin',
+      ktpAddress: 'Jl. Malioboro No. 3, Yogyakarta',
+      address: 'Jl. Malioboro No. 3, Yogyakarta',
+      expertise: 'Operasional',
+      empStatus: 'Tetap',
+      expYears: '3',
+      npwp: '55.666.777.8-004.000',
+      emailPersonal: 'rina@personal.com',
+      password: 'password123',
+      roles: ['Kepala Cabang'],
+      education: [{ level: 'S1', univ: 'UGM', year: '2017' }],
+      experience: [{ role: 'Supervisor', instansi: 'Bank ABC', thn: '2017-2019' }],
+      gajiPokok: '8000000',
+      tunjanganTetap: '1500000',
+      bank: 'BRI',
+      noRek: '5566778899',
+      atasNama: 'Rina Wati'
     }
   ]);
 
   const [systemUsers, setSystemUsers] = useState<SystemUser[]>([
     {
       id: 'u1',
-      name: 'Dr. Ahmad, Sp.M',
-      email: 'dokter1@gmail.com',
-      role: 'Dokter Spesialis',
-      category: 'medis',
+      name: 'Budi Santoso',
+      email: 'superadmin@satumata.id',
+      role: 'Super Admin',
+      category: 'non-medis',
       status: 'Verified',
-      clinic: 'Klinik Mata Sentosa A',
-      avatar: 'AH'
+      clinic: 'Pusat (HQ)',
+      avatar: 'BS'
     },
     {
       id: 'u2',
-      name: 'Dr. Siti, Sp.M',
-      email: 'dokter2@gmail.com',
+      name: 'Dr. Handoko Sentosa, Sp.M',
+      email: 'dr.handoko@satumata.id',
       role: 'Dokter Spesialis',
       category: 'medis',
       status: 'Verified',
-      clinic: 'Klinik Mata Sentosa B',
-      avatar: 'SI'
+      clinic: 'Klinik Mata Nusantara',
+      avatar: 'HS'
     },
     {
       id: 'u3',
-      name: 'Admin Klinik A',
-      email: 'admin1@gmail.com',
+      name: 'Siti Aminah',
+      email: 'admin.faskes@satumata.id',
       role: 'Admin Faskes',
       category: 'non-medis',
       status: 'Verified',
-      clinic: 'Klinik Mata Sentosa A',
-      avatar: 'AA'
+      clinic: 'RS Mata Cemerlang',
+      avatar: 'SA'
     },
     {
       id: 'u4',
-      name: 'Admin Klinik B',
-      email: 'admin2@gmail.com',
-      role: 'Admin Faskes',
+      name: 'Rina Wati',
+      email: 'admin.cabang@satumata.id',
+      role: 'Kepala Cabang',
       category: 'non-medis',
       status: 'Verified',
-      clinic: 'Klinik Mata Sentosa B',
-      avatar: 'AB'
+      clinic: 'KMN Cab. Depok',
+      avatar: 'RW'
     }
   ]);
 
@@ -186,12 +325,74 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
   const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
 
   // Mock data for dashboard stats to simulate "real" data
-  const [activeUsers] = useState(0);
+  const activeUsers = systemUsers.length;
   const [criticalTickets] = useState(0);
 
-  const [approvals] = useState<Approval[]>([]);
+  const [approvals, setApprovals] = useState<Approval[]>([]);
+
+  useEffect(() => {
+    // Generate approvals from pending clinics/branches
+    const pendingApprovals: Approval[] = [];
+    
+    clinics.forEach(c => {
+      if (c.accountStatus === 'Pending') {
+        pendingApprovals.push({
+          id: c.id,
+          type: 'Faskes',
+          typeColor: 'blue',
+          name: c.name,
+          desc: `Registrasi Faskes Baru (${c.type})`
+        });
+      }
+      c.branches?.forEach(b => {
+        if (b.accountStatus === 'Pending') {
+          pendingApprovals.push({
+            id: b.id,
+            type: 'Cabang',
+            typeColor: 'purple',
+            name: b.name,
+            desc: `Registrasi Cabang Baru dari ${c.name}`
+          });
+        }
+      });
+    });
+
+    setApprovals(pendingApprovals);
+  }, [clinics]);
+
+  const handleApprove = (id: string | number, type: string) => {
+    if (type === 'Faskes' || type === 'Cabang') {
+      setClinics(prev => prev.map(c => {
+        if (c.id === id) return { ...c, accountStatus: 'Verified' };
+        if (c.branches) {
+          return {
+            ...c,
+            branches: c.branches.map(b => b.id === id ? { ...b, accountStatus: 'Verified' } : b)
+          };
+        }
+        return c;
+      }));
+      setToastMessage({ title: 'Disetujui', desc: 'Status Faskes/Cabang telah diverifikasi.' });
+      handleAddLog(userName, `Menyetujui pendaftaran: ${type}`, 'green');
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 3000);
+    }
+  };
 
   const [notifications] = useState<Notification[]>([]);
+
+  const [roles, setRoles] = useState<MasterItem[]>([
+    { id: '1', name: 'Super Admin', code: 'SA', description: 'Full access to all system modules', status: 'Active' },
+    { id: '2', name: 'Admin Faskes', code: 'AF', description: 'Manage facility specific data', status: 'Active' },
+    { id: '3', name: 'Dokter Spesialis', code: 'DS', description: 'Medical staff with specialization', status: 'Active' },
+    { id: '4', name: 'Perawat', code: 'NR', description: 'Nursing staff', status: 'Active' },
+    { id: '5', name: 'Verifikator', code: 'VF', description: 'Verify documents and claims', status: 'Active' },
+    { id: '6', name: 'Kasir', code: 'KSR', description: 'Cashier and billing', status: 'Active' },
+    { id: '7', name: 'Pendaftaran', code: 'REG', description: 'Registration staff', status: 'Active' },
+    { id: '8', name: 'IT Support', code: 'IT', description: 'Technical support', status: 'Active' },
+    { id: '9', name: 'Apoteker', code: 'APT', description: 'Pharmacy staff', status: 'Active' },
+    { id: '10', name: 'Kepala Cabang', code: 'KC', description: 'Branch Manager', status: 'Active' },
+  ]);
 
   const [userLogs, setUserLogs] = useState<UserLog[]>([
     { id: 1, user: 'Admin Klinik A', action: 'Login ke sistem', time: '10 menit yang lalu', color: 'blue' },
@@ -211,15 +412,19 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
   };
 
   const handleSaveEmployee = (data: Partial<Employee>) => {
+    let employeeId = '';
     if (editingEmployee) {
+      employeeId = editingEmployee.id;
       setEmployees(prev => prev.map(e => e.id === editingEmployee.id ? { ...e, ...data } as Employee : e));
       setToastMessage({ title: 'Berhasil Diperbarui', desc: 'Data pegawai telah diperbarui.' });
       handleAddLog(userName, `Memperbarui data pegawai: ${data.name || editingEmployee.name}`, 'orange');
     } else {
+      employeeId = Math.random().toString(36).substr(2, 9);
       const newEmployee: Employee = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: employeeId,
         name: data.name || '',
         nip: data.nip || '',
+        nik: data.nik,
         profession: data.profession || '',
         jobTitle: data.jobTitle || '',
         category: data.category || 'medis',
@@ -231,27 +436,107 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
         strExp: data.strExp,
         sip: data.sip,
         sipExp: data.sipExp,
-        pob: 'Jakarta', // Default
-        dob: '1990-01-01', // Default
-        gender: 'Laki-laki', // Default
-        religion: 'Islam', // Default
-        marital: 'Belum Kawin', // Default
-        ktpAddress: 'Alamat KTP', // Default
-        address: 'Alamat Domisili', // Default
-        expertise: 'Umum', // Default
-        empStatus: 'Tetap', // Default
-        expYears: '0', // Default
-        npwp: '00.000.000.0-000.000', // Default
-        emailPersonal: data.email || ''
+        pob: data.pob || 'Jakarta',
+        dob: data.dob || '1990-01-01',
+        gender: data.gender || 'Laki-laki',
+        religion: data.religion || 'Islam',
+        marital: data.marital || 'Belum Kawin',
+        ktpAddress: data.ktpAddress || '',
+        address: data.address || '',
+        expertise: data.expertise || '',
+        empStatus: data.empStatus || 'Tetap',
+        expYears: data.expYears || '0',
+        npwp: data.npwp || '',
+        emailPersonal: data.emailPersonal || data.email || '',
+        password: data.password,
+        roles: data.roles,
+        education: data.education,
+        experience: data.experience,
+        rkk: data.rkk,
+        schedule: data.schedule,
+        training: data.training,
+        mandatoryTraining: data.mandatoryTraining,
+        gajiPokok: data.gajiPokok,
+        tunjanganTetap: data.tunjanganTetap,
+        tunjanganTidakTetap: data.tunjanganTidakTetap,
+        insentif: data.insentif,
+        bonus: data.bonus,
+        komisi: data.komisi,
+        benefit: data.benefit,
+        fasilitas: data.fasilitas,
+        jasmedScheme: data.jasmedScheme,
+        jasmedItems: data.jasmedItems,
+        jasmedPoin: data.jasmedPoin,
+        jasmedRatePoin: data.jasmedRatePoin,
+        bank: data.bank,
+        noRek: data.noRek,
+        atasNama: data.atasNama
       };
       setEmployees(prev => [newEmployee, ...prev]);
       setToastMessage({ title: 'Berhasil Ditambahkan', desc: 'Pegawai baru telah ditambahkan.' });
       handleAddLog(userName, `Menambahkan pegawai baru: ${newEmployee.name}`, 'green');
     }
+
+    // Link to System User if email/username is provided
+    if (data.email) {
+      // If editing, try to find by old email first, otherwise by new email
+      const targetEmail = editingEmployee ? editingEmployee.email : data.email;
+      const existingUser = systemUsers.find(u => u.email === targetEmail);
+      const userRoles = data.roles && data.roles.length > 0 ? data.roles.join(', ') : (data.jobTitle || 'User');
+      
+      if (existingUser) {
+        setSystemUsers(prev => prev.map(u => u.email === targetEmail ? {
+          ...u,
+          name: data.name || u.name,
+          email: data.email || u.email, // Update email
+          role: userRoles,
+          category: data.category || u.category,
+          avatar: (data.name || u.name).substring(0, 2).toUpperCase()
+        } : u));
+      } else {
+        const newUser: SystemUser = {
+          id: Math.random().toString(36).substr(2, 9),
+          name: data.name || '',
+          email: data.email,
+          role: userRoles,
+          status: 'Verified',
+          clinic: 'Global Access',
+          category: data.category,
+          avatar: (data.name || 'U').substring(0, 2).toUpperCase()
+        };
+        setSystemUsers(prev => [newUser, ...prev]);
+      }
+    }
+
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
     setIsEmployeeModalOpen(false);
     setEditingEmployee(null);
+  };
+
+  const handleSaveBranch = (parentId: string, branchData: any) => {
+    setClinics(prev => prev.map(c => {
+      if (c.id === parentId) {
+        const newBranch: Clinic = {
+          id: `b-${Math.random().toString(36).substr(2, 9)}`,
+          name: branchData.name || 'Cabang Baru',
+          code: branchData.code || `K-${Math.floor(Math.random() * 100000)}`,
+          location: branchData.location || 'Lokasi Cabang',
+          type: 'Cabang',
+          contractStatus: 'Active',
+          accountStatus: 'Pending',
+          lastActivity: 'Baru saja'
+        };
+        return {
+          ...c,
+          branches: [...(c.branches || []), newBranch]
+        };
+      }
+      return c;
+    }));
+    setToastMessage({ title: 'Cabang Ditambahkan', desc: 'Fasilitas cabang baru telah didaftarkan.' });
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
   };
 
   const handleSaveFaskes = (data: any) => {
@@ -399,9 +684,9 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
           {activeView === 'dashboard' ? (
           <React.Fragment>
             {/* 2. HERO: CONTROL TOWER */}
-        <div className="relative bg-gradient-to-r from-slate-800 to-satu-dark rounded-3xl p-8 text-white shadow-2xl overflow-hidden">
+        <div className="relative bg-[#01315F] rounded-3xl p-8 text-white shadow-2xl overflow-hidden">
           {/* Background Elements */}
-          <div className="absolute right-0 top-0 w-96 h-96 bg-satu-primary/30 rounded-full blur-3xl -mr-20 -mt-20"></div>
+          <div className="absolute right-0 top-0 w-96 h-96 bg-white/5 rounded-full blur-3xl -mr-20 -mt-20"></div>
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
 
           <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -456,8 +741,11 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
                     <p className="text-xs font-bold text-gray-800">{approval.name}</p>
                     <p className="text-[10px] text-gray-500 mb-2">{approval.desc}</p>
                     <div className="flex gap-2">
-                      <button className="flex-1 py-1.5 bg-satu-primary text-white text-[10px] font-bold rounded hover:bg-blue-700 transition-colors">Approve</button>
-                      <button className="flex-1 py-1.5 border border-gray-300 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-100 transition-colors">Detail</button>
+                      <button onClick={() => handleApprove(approval.id, approval.type)} className="flex-1 py-1.5 bg-satu-primary text-white text-[10px] font-bold rounded hover:bg-blue-700 transition-colors">Approve</button>
+                      <button onClick={() => {
+                        setClinicStatusFilter('Menunggu Persetujuan');
+                        setActiveView('clinic-management');
+                      }} className="flex-1 py-1.5 border border-gray-300 text-gray-600 text-[10px] font-bold rounded hover:bg-gray-100 transition-colors">Detail</button>
                     </div>
                   </div>
                 ))}
@@ -519,8 +807,8 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Total Faskes</p>
-                  <p className="text-2xl font-display font-bold text-satu-dark">152</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Faskes Pusat / Mandiri</p>
+                  <p className="text-2xl font-display font-bold text-satu-dark">{clinics.length}</p>
                 </div>
                 <div className="w-10 h-10 bg-blue-50 text-satu-primary rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -531,53 +819,55 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
               
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Total Dokter</p>
-                  <p className="text-2xl font-display font-bold text-satu-dark">842</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Faskes Cabang</p>
+                  <p className="text-2xl font-display font-bold text-satu-dark">{clinics.reduce((acc, c) => acc + (c.branches?.length || 0), 0)}</p>
                 </div>
-                <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path>
-                  </svg>
-                </div>
-              </div>
-
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between relative overflow-hidden group">
-                <div className="absolute inset-0 bg-red-50 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-                <div className="relative z-10">
-                  <p className="text-xs text-gray-500 font-medium group-hover:text-red-700">Tiket Support</p>
-                  <div className="flex items-end gap-1">
-                    <p className="text-2xl font-display font-bold text-gray-800">24</p>
-                    <p className="text-xs font-bold text-red-600 mb-1.5 animate-pulse">5 Critical</p>
-                  </div>
-                </div>
-                <div className="relative z-10 w-10 h-10 bg-red-100 text-red-600 rounded-xl flex items-center justify-center">
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
                   </svg>
                 </div>
               </div>
 
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">Pending Bayar</p>
-                  <p className="text-2xl font-display font-bold text-satu-error">Rp 45jt</p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Faskes Aktif</p>
+                  <p className="text-2xl font-display font-bold text-satu-dark">
+                    {clinics.reduce((acc, c) => acc + (c.contractStatus === 'Active' && c.accountStatus === 'Verified' ? 1 : 0) + (c.branches?.filter(b => b.contractStatus === 'Active' && b.accountStatus === 'Verified').length || 0), 0)}
+                  </p>
                 </div>
-                <div className="w-10 h-10 bg-red-50 text-satu-error rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+              </div>
+
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between">
+                <div>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Faskes Non Aktif</p>
+                  <p className="text-2xl font-display font-bold text-gray-600">
+                    {clinics.reduce((acc, c) => acc + ((c.contractStatus !== 'Active' || (c.accountStatus !== 'Verified' && c.accountStatus !== 'Pending')) ? 1 : 0) + (c.branches?.filter(b => (b.contractStatus !== 'Active' || (b.accountStatus !== 'Verified' && b.accountStatus !== 'Pending'))).length || 0), 0)}
+                  </p>
+                </div>
+                <div className="w-10 h-10 bg-gray-100 text-gray-500 rounded-xl flex items-center justify-center">
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"></path>
                   </svg>
                 </div>
               </div>
 
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between relative overflow-hidden">
-                <div className="absolute top-0 right-0 w-2 h-2 bg-satu-gold rounded-full m-2"></div>
+                <div className="absolute top-0 right-0 w-2 h-2 bg-orange-500 rounded-full m-2 animate-pulse"></div>
                 <div>
-                  <p className="text-xs text-gray-500 font-medium">MRR Add-ons</p>
-                  <p className="text-2xl font-display font-bold text-satu-gold">485<span className="text-sm text-gray-400">jt</span></p>
+                  <p className="text-xs text-gray-500 font-medium uppercase tracking-wider">Menunggu Persetujuan</p>
+                  <p className="text-2xl font-display font-bold text-orange-600">
+                    {clinics.reduce((acc, c) => acc + (c.accountStatus === 'Pending' ? 1 : 0) + (c.branches?.filter(b => b.accountStatus === 'Pending').length || 0), 0)}
+                  </p>
                 </div>
-                <div className="w-10 h-10 bg-yellow-50 text-satu-gold rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-orange-50 text-orange-600 rounded-xl flex items-center justify-center">
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
                 </div>
               </div>
@@ -816,6 +1106,8 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
             onViewFaskes={handleViewFaskes}
             onDeleteFaskes={handleDeleteFaskes}
             onSaveFaskes={handleSaveFaskes}
+            onSaveBranch={handleSaveBranch}
+            initialStatusFilter={clinicStatusFilter}
           />
         ) : activeView === 'employee-directory' ? (
           <EmployeeDirectoryView 
@@ -847,8 +1139,9 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
             users={systemUsers}
             employees={employees}
             clinics={clinics}
+            availableRoles={roles}
             onBack={() => setActiveView('dashboard')}
-            onAddUser={(user) => {
+            onAddUser={(user: any) => {
               const newUser: SystemUser = {
                 id: Math.random().toString(36).substr(2, 9),
                 name: user.name || '',
@@ -856,18 +1149,74 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
                 role: user.role || 'Admin Faskes',
                 status: 'Verified',
                 clinic: user.clinic || 'Global Access',
-                category: user.category,
+                category: user.role && (user.role.includes('Dokter') || user.role.includes('Perawat') || user.role.includes('Bidan')) ? 'medis' : 'non-medis',
                 avatar: (user.name || 'U').substring(0, 2).toUpperCase()
               };
+              
+              // If password is provided, we can log it or handle it (mocking)
+              console.log(`User created with password: ${user.password}`);
+
               setSystemUsers(prev => [newUser, ...prev]);
-              setToastMessage({ title: 'Berhasil', desc: 'User baru berhasil ditambahkan.' });
+              
+              // Also create a basic employee record to keep them linked
+              const newEmployee: Employee = {
+                id: Math.random().toString(36).substr(2, 9),
+                name: newUser.name,
+                email: newUser.email,
+                jobTitle: newUser.role,
+                category: newUser.category || 'non-medis',
+                status: 'Active',
+                nip: `NIP-${Math.floor(Math.random() * 1000000)}`,
+                profession: newUser.role.split(', ')[0],
+                img: newUser.avatar,
+                phone: '',
+                pob: 'Jakarta',
+                dob: '1990-01-01',
+                gender: 'Laki-laki',
+                religion: 'Islam',
+                marital: 'Belum Kawin',
+                ktpAddress: '',
+                address: '',
+                expertise: '',
+                empStatus: 'Tetap',
+                expYears: '0',
+                npwp: '',
+                emailPersonal: newUser.email,
+                password: user.password,
+                roles: newUser.role.split(', ')
+              };
+              setEmployees(prev => [newEmployee, ...prev]);
+
+              setToastMessage({ title: 'Berhasil', desc: 'User & Data Pegawai berhasil ditambahkan.' });
               handleAddLog(userName, `Menambahkan user baru: ${newUser.name} (${newUser.role})`, 'green');
               setShowToast(true);
               setTimeout(() => setShowToast(false), 3000);
             }}
-            onEditUser={(user) => {
-              setSystemUsers(prev => prev.map(u => u.id === user.id ? user : u));
-              setToastMessage({ title: 'Berhasil', desc: 'Data user berhasil diperbarui.' });
+            onEditUser={(user: any) => {
+              // Find original user to get old email if it changed
+              const originalUser = systemUsers.find(u => u.id === user.id);
+              const oldEmail = originalUser?.email;
+
+              const updatedUser = {
+                ...user,
+                category: user.role && (user.role.includes('Dokter') || user.role.includes('Perawat') || user.role.includes('Bidan')) ? 'medis' : 'non-medis',
+                avatar: (user.name || '').substring(0, 2).toUpperCase()
+              };
+              setSystemUsers(prev => prev.map(u => u.id === user.id ? updatedUser : u));
+              
+              // Also update the linked employee record
+              const targetEmail = oldEmail || user.email;
+              setEmployees(prev => prev.map(e => e.email === targetEmail ? {
+                ...e,
+                name: user.name,
+                jobTitle: user.role,
+                category: updatedUser.category,
+                email: user.email, // Update email in employee if it changed in user
+                roles: user.role.split(', '),
+                password: user.password ? user.password : e.password // Update password if provided
+              } : e));
+
+              setToastMessage({ title: 'Berhasil', desc: 'Data user & pegawai berhasil diperbarui.' });
               handleAddLog(userName, `Memperbarui data user: ${user.name}`, 'orange');
               setShowToast(true);
               setTimeout(() => setShowToast(false), 3000);
@@ -909,7 +1258,11 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
             }}
           />
         ) : activeView === 'master-data' ? (
-          <MasterDataView onBack={() => setActiveView('dashboard')} />
+          <MasterDataView 
+            onBack={() => setActiveView('dashboard')} 
+            roles={roles}
+            onUpdateRoles={setRoles}
+          />
         ) : (
           <FaskesModal 
             isOpen={true}
@@ -948,16 +1301,18 @@ export default function SuperAdminDashboard({ onLogout, userName = 'Administrato
         </footer>
       )}
 
-      {/* Employee Modal */}
-      <EmployeeFormModal 
-        isOpen={isEmployeeModalOpen}
-        onClose={() => {
-          setIsEmployeeModalOpen(false);
-          setEditingEmployee(null);
-        }}
-        onSave={handleSaveEmployee}
-        initialData={editingEmployee}
-      />
+      {/* Employee Form View (Full Page) */}
+      {isEmployeeModalOpen && (
+        <EmployeeFormView 
+          initialData={editingEmployee}
+          availableRoles={roles}
+          onClose={() => {
+            setIsEmployeeModalOpen(false);
+            setEditingEmployee(null);
+          }}
+          onSave={handleSaveEmployee}
+        />
+      )}
 
       {/* Toast Notification */}
       {showToast && (

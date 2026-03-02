@@ -119,6 +119,7 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
     return (
       <NetraLogRegistryDashboard 
         onBack={() => setActiveView('dashboard')}
+        onNavigateToMarketplace={() => setActiveView('marketplace')}
         userName={userName}
         activeRegistries={activeRegistries}
       />
@@ -141,10 +142,7 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
           </div>
 
           <div className="flex items-center gap-6">
-            <div className="hidden md:flex items-center bg-white/10 rounded-full px-4 py-1.5 border border-white/10 w-64 focus-within:w-80 transition-all">
-              <Search className="w-4 h-4 text-white/60" />
-              <input type="text" placeholder="Cari Pasien..." className="bg-transparent border-none focus:outline-none text-sm text-white ml-2 w-full placeholder-white/40" />
-            </div>
+            {/* Search bar removed as per request */}
 
             <div className="relative">
               <button 
@@ -200,7 +198,7 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
           {/* Left Column (Sidebar) */}
           <div className="lg:col-span-3 space-y-6">
             {/* Calendar */}
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="font-display font-bold text-xs text-satu-dark flex items-center gap-2 uppercase tracking-wider">
                   <Calendar className="w-4 h-4 text-satu-primary" />
@@ -227,9 +225,14 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
                 {renderCalendar()}
               </div>
               <div className="pt-4 border-t border-gray-100">
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-3">
-                  Jadwal: {new Date(selectedDateKey).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
-                </p>
+                <div className="flex justify-between items-center mb-3">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                    Jadwal: {new Date(selectedDateKey).toLocaleDateString('id-ID', { day: 'numeric', month: 'long' })}
+                  </p>
+                  <button className="text-[10px] font-bold text-satu-primary hover:underline">
+                    + Tambah
+                  </button>
+                </div>
                 <div className="space-y-3 max-h-[250px] overflow-y-auto no-scrollbar">
                   {scheduleData[selectedDateKey]?.map((sch, i) => (
                     <div key={i} className={`p-3 rounded-xl border-l-4 shadow-sm ${sch.type === 'rs' ? 'border-l-blue-500 bg-blue-50/50' : sch.type === 'kl' ? 'border-l-satu-gold bg-yellow-50/50' : 'border-l-green-500 bg-green-50/50'}`}>
@@ -240,6 +243,7 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
                   )) || (
                     <div className="text-center py-8 border border-dashed border-gray-200 rounded-2xl bg-gray-50/50">
                       <p className="text-xs font-bold text-gray-400 italic">Tidak ada jadwal</p>
+                      <button className="mt-2 text-[10px] text-satu-primary font-bold hover:underline">Buat Jadwal Baru</button>
                     </div>
                   )}
                 </div>
@@ -268,8 +272,8 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
             {/* Sebaran Pasien */}
             <div className="space-y-4">
               <h2 className="font-display font-bold text-xl text-satu-dark">Sebaran Pasien Hari Ini</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 flex items-center justify-between">
+              <div className="flex overflow-x-auto gap-6 pb-4 no-scrollbar">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 flex items-center justify-between min-w-[280px]">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold text-sm border border-blue-100">RS</div>
                     <div>
@@ -282,7 +286,7 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
                     <p className="text-[9px] text-gray-400 font-bold uppercase">Pasien</p>
                   </div>
                 </div>
-                <div className="bg-white rounded-2xl p-6 shadow-sm border border-yellow-100 flex items-center justify-between">
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-yellow-100 flex items-center justify-between min-w-[280px]">
                   <div className="flex items-center gap-4">
                     <div className="w-12 h-12 rounded-2xl bg-yellow-50 text-satu-gold flex items-center justify-center font-bold text-sm border border-yellow-100">KL</div>
                     <div>
@@ -292,6 +296,19 @@ export default function DoctorDashboard({ onLogout, userName }: DoctorDashboardP
                   </div>
                   <div className="text-right">
                     <p className="text-3xl font-display font-bold text-satu-gold">15</p>
+                    <p className="text-[9px] text-gray-400 font-bold uppercase">Pasien</p>
+                  </div>
+                </div>
+                <div className="bg-white rounded-2xl p-6 shadow-sm border border-green-100 flex items-center justify-between min-w-[280px]">
+                  <div className="flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center font-bold text-sm border border-green-100">PM</div>
+                    <div>
+                      <h3 className="font-bold text-gray-800 text-sm">Praktek Mandiri</h3>
+                      <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">Ruko Blok A</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-3xl font-display font-bold text-green-600">8</p>
                     <p className="text-[9px] text-gray-400 font-bold uppercase">Pasien</p>
                   </div>
                 </div>

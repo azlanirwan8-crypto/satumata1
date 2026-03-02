@@ -11,14 +11,19 @@ import {
   ResponsiveContainer, PieChart, Pie, Cell 
 } from 'recharts';
 
+import UveitisRegistry from './UveitisRegistry';
+import UlkusRegistry from './UlkusRegistry';
+import FundusRegistry from './FundusRegistry';
+
 interface NetraLogRegistryDashboardProps {
   onBack: () => void;
+  onNavigateToMarketplace?: () => void;
   userName: string;
   activeRegistries: string[]; // ['Uveitis', 'Fundus', 'Ulkus']
 }
 
-export default function NetraLogRegistryDashboard({ onBack, userName, activeRegistries }: NetraLogRegistryDashboardProps) {
-  const [activeView, setActiveView] = useState<'dashboard' | 'registry' | 'laporan' | 'payment' | 'license' | 'add-registry'>('dashboard');
+export default function NetraLogRegistryDashboard({ onBack, onNavigateToMarketplace, userName, activeRegistries }: NetraLogRegistryDashboardProps) {
+  const [activeView, setActiveView] = useState<'dashboard' | 'registry' | 'laporan' | 'payment' | 'license' | 'add-registry' | 'uveitis-registry' | 'ulkus-registry' | 'fundus-registry'>('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [selectedRegistryForAdd, setSelectedRegistryForAdd] = useState<string>('all');
   const [laporanTab, setLaporanTab] = useState<'visual' | 'history'>('visual');
@@ -184,7 +189,7 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
             count="452" 
             icon={<Eye />} 
             color="emerald" 
-            onAdd={() => { setSelectedRegistryForAdd('Uveitis'); switchView('add-registry'); }}
+            onAdd={() => { switchView('uveitis-registry'); }}
             onFilter={() => setFilterType('Uveitis')}
           />
         )}
@@ -194,7 +199,7 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
             count="320" 
             icon={<Aperture />} 
             color="blue" 
-            onAdd={() => { setSelectedRegistryForAdd('Fundus'); switchView('add-registry'); }}
+            onAdd={() => { switchView('fundus-registry'); }}
             onFilter={() => setFilterType('Fundus')}
           />
         )}
@@ -204,12 +209,18 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
             count="112" 
             icon={<Droplet />} 
             color="amber" 
-            onAdd={() => { setSelectedRegistryForAdd('Ulkus'); switchView('add-registry'); }}
+            onAdd={() => { switchView('ulkus-registry'); }}
             onFilter={() => setFilterType('Ulkus')}
           />
         )}
         <div 
-          onClick={() => switchView('license')}
+          onClick={() => {
+            if (onNavigateToMarketplace) {
+              onNavigateToMarketplace();
+            } else {
+              switchView('license');
+            }
+          }}
           className="bg-slate-50/50 border-dashed border-2 border-slate-300 rounded-2xl p-5 flex flex-col justify-center items-center text-center cursor-pointer transition-all hover:border-teal-400 hover:bg-teal-50/30 min-h-[180px] group"
         >
           <div className="w-12 h-12 rounded-full bg-white border border-slate-200 flex items-center justify-center mb-2 group-hover:scale-110 group-hover:border-teal-300 transition-all shadow-sm">
@@ -252,7 +263,18 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
             </div>
             
             <button 
-              onClick={() => { setSelectedRegistryForAdd('all'); switchView('add-registry'); }}
+              onClick={() => { 
+                if (filterType === 'Uveitis') {
+                  switchView('uveitis-registry');
+                } else if (filterType === 'Fundus') {
+                  switchView('fundus-registry');
+                } else if (filterType === 'Ulkus') {
+                  switchView('ulkus-registry');
+                } else {
+                  setSelectedRegistryForAdd('all'); 
+                  switchView('add-registry'); 
+                }
+              }}
               className="bg-teal-600 hover:bg-teal-700 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-colors flex items-center justify-center gap-2 shadow-sm whitespace-nowrap active:scale-95"
             >
               <Plus className="w-4 h-4" /> Tambah Data
@@ -546,12 +568,10 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
               <Menu className="w-6 h-6" />
             </button>
             <h2 className="text-lg font-bold text-slate-800 hidden md:block">
-              {activeView === 'dashboard' ? 'Dashboard Overview' : 
-               activeView === 'registry' ? 'Data Registry' : 
-               activeView === 'laporan' ? 'Laporan & Riset' : 
+              {activeView === 'laporan' ? 'Laporan & Riset' : 
                activeView === 'payment' ? 'Riwayat Pembayaran' : 
                activeView === 'license' ? 'Status Lisensi Layanan' : 
-               'Input Data Registry'}
+               ''}
             </h2>
           </div>
 
@@ -572,7 +592,7 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
         </header>
 
         {/* Content Area */}
-        <div className="flex-grow overflow-y-auto p-4 md:p-8 no-scrollbar">
+        <div className={`flex-grow overflow-y-auto no-scrollbar ${(activeView === 'uveitis-registry' || activeView === 'ulkus-registry' || activeView === 'fundus-registry') ? '' : 'p-4 md:p-8'}`}>
           {activeView === 'dashboard' && renderDashboard()}
           {activeView === 'registry' && renderRegistry()}
           {activeView === 'add-registry' && renderAddRegistry()}
@@ -900,6 +920,15 @@ export default function NetraLogRegistryDashboard({ onBack, userName, activeRegi
               </div>
             </div>
           )}
+          {activeView === 'uveitis-registry' && (
+            <UveitisRegistry onBack={() => switchView('registry')} />
+          )}
+          {activeView === 'ulkus-registry' && (
+            <UlkusRegistry onBack={() => switchView('registry')} />
+          )}
+          {activeView === 'fundus-registry' && (
+            <FundusRegistry onBack={() => switchView('registry')} />
+          )}
         </div>
       </main>
     </div>
@@ -963,47 +992,51 @@ function StatCard({ title, value, trend, subtitle, icon, color }: { title: strin
 
 function RegistryCard({ title, count, icon, color, onAdd, onFilter }: { title: string, count: string, icon: React.ReactNode, color: string, onAdd: () => void, onFilter: () => void }) {
   const colorClasses: Record<string, string> = {
-    emerald: 'bg-emerald-100 text-emerald-600 group-hover:bg-emerald-600',
-    blue: 'bg-blue-100 text-blue-600 group-hover:bg-blue-600',
-    amber: 'bg-amber-100 text-amber-600 group-hover:bg-amber-600',
+    emerald: 'bg-[#d1fae5] text-[#059669]', // Light green bg, dark green icon
+    blue: 'bg-[#dbeafe] text-[#2563eb]',   // Light blue bg, dark blue icon
+    amber: 'bg-[#fef3c7] text-[#d97706]',  // Light amber bg, dark amber icon
   };
 
-  const borderClasses: Record<string, string> = {
-    emerald: 'hover:border-emerald-500',
-    blue: 'hover:border-blue-500',
-    amber: 'hover:border-amber-500',
+  const badgeClasses: Record<string, string> = {
+    emerald: 'text-[#059669] border-[#059669]',
+    blue: 'text-[#2563eb] border-[#2563eb]',
+    amber: 'text-[#d97706] border-[#d97706]',
+  };
+
+  const buttonClasses: Record<string, string> = {
+    emerald: 'bg-[#059669] hover:bg-[#047857]',
+    blue: 'bg-[#2563eb] hover:bg-[#1d4ed8]',
+    amber: 'bg-[#d97706] hover:bg-[#b45309]',
   };
 
   return (
     <div 
       onClick={onFilter}
-      className={`bg-white border border-slate-200 rounded-2xl p-5 transition-all cursor-pointer group shadow-sm hover:shadow-md ${borderClasses[color]}`}
+      className="bg-white border border-slate-200 rounded-[20px] p-6 transition-all cursor-pointer hover:shadow-md flex flex-col h-full"
     >
-      <div className="flex justify-between items-start mb-3">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-colors group-hover:text-white ${colorClasses[color]}`}>
-          {React.cloneElement(icon as React.ReactElement, { className: 'w-6 h-6' })}
+      <div className="flex justify-between items-start mb-6">
+        <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${colorClasses[color]}`}>
+          {React.cloneElement(icon as React.ReactElement, { className: 'w-7 h-7' })}
         </div>
-        <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase tracking-wider border ${
-          color === 'emerald' ? 'bg-emerald-50 text-emerald-700 border-emerald-100' :
-          color === 'blue' ? 'bg-blue-50 text-blue-700 border-blue-100' :
-          'bg-amber-50 text-amber-700 border-amber-100'
-        }`}>
+        <span className={`px-3 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider border ${badgeClasses[color]} bg-white`}>
           Aktif
         </span>
       </div>
-      <h3 className="text-base font-bold text-slate-800 mb-1">{title}</h3>
-      <div className="text-2xl font-bold text-slate-800 mb-4">{count} <span className="text-xs font-normal text-slate-500">Laporan</span></div>
       
-      <div className="flex items-center justify-end pt-3 border-t border-slate-100">
+      <div className="flex-1">
+        <h3 className="text-lg font-bold text-slate-800 mb-2">{title}</h3>
+        <div className="flex items-baseline gap-2 mb-6">
+          <span className="text-4xl font-bold text-slate-800">{count}</span>
+          <span className="text-sm font-medium text-slate-500">Laporan</span>
+        </div>
+      </div>
+      
+      <div className="pt-4 border-t border-slate-100 mt-auto">
         <button 
           onClick={(e) => { e.stopPropagation(); onAdd(); }}
-          className={`text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 shadow-sm hover:shadow-md ${
-            color === 'emerald' ? 'bg-emerald-600 hover:bg-emerald-700' :
-            color === 'blue' ? 'bg-blue-600 hover:bg-blue-700' :
-            'bg-amber-600 hover:bg-amber-700'
-          }`}
+          className={`w-full text-white text-sm font-bold py-3 rounded-xl transition-colors flex items-center justify-center gap-2 shadow-sm ${buttonClasses[color]}`}
         >
-          <Plus className="w-3 h-3" /> Tambah Data
+          <Plus className="w-4 h-4" /> Tambah Data
         </button>
       </div>
     </div>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { ChevronLeft, Users, UserCircle, FileCheck, PlusCircle, Search, Edit3, Trash2, KeyRound, Stethoscope, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ChevronLeft, Users, UserCircle, FileCheck, PlusCircle, Search, Edit3, Trash2, KeyRound, Stethoscope, AlertTriangle, ShieldCheck, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import EmployeeDirectoryView, { Employee } from './EmployeeDirectoryView';
 import CredentialingView from './CredentialingView';
+import { MasterItem } from './SuperAdminDashboard';
 
 export interface SystemUser {
   id: string;
@@ -21,6 +22,7 @@ interface UserManagementViewProps {
   users: SystemUser[];
   employees?: Employee[];
   clinics?: Clinic[];
+  availableRoles?: MasterItem[];
   onAddUser: (user: Partial<SystemUser>) => void;
   onEditUser: (user: SystemUser) => void;
   onDeleteUser: (id: string) => void;
@@ -36,6 +38,7 @@ export default function UserManagementView({
   users,
   employees = [],
   clinics = [],
+  availableRoles = [],
   onAddUser,
   onEditUser,
   onDeleteUser,
@@ -51,6 +54,7 @@ export default function UserManagementView({
   // Stats Calculation
   const totalPegawai = employees.length;
   const tenagaMedis = employees.filter(e => e.category === 'medis').length;
+  const tenagaNonMedis = employees.filter(e => e.category === 'non-medis').length;
   const strSipExpired = employees.filter(e => {
     const today = new Date();
     const strDate = e.strExp ? new Date(e.strExp) : null;
@@ -65,8 +69,8 @@ export default function UserManagementView({
   const itemsPerPage = 5;
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState<SystemUser | null>(null);
-  const [formData, setFormData] = useState<Partial<SystemUser>>({
-    name: '', email: '', role: '', category: 'medis', clinic: ''
+  const [formData, setFormData] = useState<any>({
+    name: '', email: '', roles: [], password: '', status: 'Verified', clinic: 'Global Access'
   });
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
@@ -80,24 +84,41 @@ export default function UserManagementView({
 
   const handleOpenAdd = () => {
     setEditingUser(null);
-    setFormData({ name: '', email: '', role: '', category: 'medis' });
+    setFormData({ name: '', email: '', roles: [], password: '', status: 'Verified', clinic: 'Global Access' });
     setIsModalOpen(true);
   };
 
   const handleOpenEdit = (user: SystemUser) => {
     setEditingUser(user);
-    setFormData(user);
+    setFormData({
+      ...user,
+      roles: user.role ? user.role.split(', ') : [],
+      password: '' // Don't show password on edit
+    });
     setIsModalOpen(true);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const submissionData = {
+      ...formData,
+      role: formData.roles.join(', ')
+    };
     if (editingUser) {
-      onEditUser({ ...editingUser, ...formData } as SystemUser);
+      onEditUser({ ...editingUser, ...submissionData } as SystemUser);
     } else {
-      onAddUser(formData);
+      onAddUser(submissionData);
     }
     setIsModalOpen(false);
+  };
+
+  const toggleRole = (role: string) => {
+    setFormData((prev: any) => {
+      const roles = prev.roles.includes(role)
+        ? prev.roles.filter((r: string) => r !== role)
+        : [...prev.roles, role];
+      return { ...prev, roles };
+    });
   };
 
   return (
@@ -116,7 +137,7 @@ export default function UserManagementView({
         </div>
 
         {/* Infographic Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Total Pegawai</p>
@@ -140,6 +161,19 @@ export default function UserManagementView({
             </div>
             <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
               <Stethoscope className="w-5 h-5" />
+            </div>
+          </div>
+
+          <div className="bg-white border border-gray-100 rounded-xl p-4 shadow-sm flex items-center justify-between">
+            <div>
+              <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Tenaga Non-Medis</p>
+              <h3 className="text-3xl font-display font-bold text-satu-dark mt-1">{tenagaNonMedis}</h3>
+              <div className="w-24 h-1.5 bg-gray-100 rounded-full mt-2 overflow-hidden">
+                <div className="h-full bg-orange-500 rounded-full" style={{ width: `${totalPegawai > 0 ? (tenagaNonMedis / totalPegawai) * 100 : 0}%` }}></div>
+              </div>
+            </div>
+            <div className="w-10 h-10 rounded-xl bg-orange-50 text-orange-600 flex items-center justify-center">
+              <Briefcase className="w-5 h-5" />
             </div>
           </div>
 
@@ -328,9 +362,6 @@ export default function UserManagementView({
                 </button>
               </div>
               <form onSubmit={handleSubmit} className="p-6 space-y-4">
-                <div className="bg-blue-50 text-blue-700 p-3 rounded-xl text-xs mb-4 border border-blue-100">
-                  <strong>Info:</strong> Akun ini akan digunakan user untuk login. User dapat melengkapi profil pegawai mereka setelah login.
-                </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Nama Lengkap</label>
                   <input 
@@ -338,8 +369,30 @@ export default function UserManagementView({
                     value={formData.name || ''}
                     onChange={(e) => setFormData({...formData, name: e.target.value})}
                     className="w-full px-4 py-2.5 border rounded-xl bg-gray-50 outline-none text-sm focus:border-satu-primary focus:ring-1 focus:ring-satu-primary"
+                    placeholder="Masukkan nama lengkap"
                   />
                 </div>
+                
+                <div>
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Role (Multiple)</label>
+                  <div className="grid grid-cols-2 gap-2 p-3 bg-gray-50 border rounded-xl max-h-40 overflow-y-auto custom-scroll">
+                    {availableRoles.map((role) => (
+                      <label key={role.id} className="flex items-center gap-2 cursor-pointer hover:bg-white p-1 rounded transition-colors">
+                        <input 
+                          type="checkbox"
+                          checked={formData.roles.includes(role.name)}
+                          onChange={() => toggleRole(role.name)}
+                          className="w-4 h-4 rounded text-satu-primary focus:ring-satu-primary border-gray-300"
+                        />
+                        <span className="text-xs text-gray-700">{role.name}</span>
+                      </label>
+                    ))}
+                    {availableRoles.length === 0 && (
+                      <p className="text-[10px] text-gray-400 italic col-span-2">Belum ada data role di Master Data.</p>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Email</label>
                   <input 
@@ -347,59 +400,21 @@ export default function UserManagementView({
                     value={formData.email || ''}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
                     className="w-full px-4 py-2.5 border rounded-xl bg-gray-50 outline-none text-sm focus:border-satu-primary focus:ring-1 focus:ring-satu-primary"
+                    placeholder="nama@email.com"
                   />
                 </div>
+
                 <div>
-                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Faskes / Klinik</label>
-                  <select 
-                    value={formData.clinic || ''} required
-                    onChange={(e) => setFormData({...formData, clinic: e.target.value})}
+                  <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Password</label>
+                  <input 
+                    type="password" required={!editingUser}
+                    value={formData.password || ''}
+                    onChange={(e) => setFormData({...formData, password: e.target.value})}
                     className="w-full px-4 py-2.5 border rounded-xl bg-gray-50 outline-none text-sm focus:border-satu-primary focus:ring-1 focus:ring-satu-primary"
-                  >
-                    <option value="">Pilih Faskes...</option>
-                    {clinics.map(c => (
-                      <option key={c.id} value={c.name}>{c.name}</option>
-                    ))}
-                  </select>
+                    placeholder={editingUser ? "Kosongkan jika tidak ingin mengubah" : "Masukkan password"}
+                  />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Kategori</label>
-                    <select 
-                      value={formData.category || 'medis'}
-                      onChange={(e) => setFormData({...formData, category: e.target.value as 'medis' | 'non-medis'})}
-                      className="w-full px-4 py-2.5 border rounded-xl bg-gray-50 outline-none text-sm focus:border-satu-primary focus:ring-1 focus:ring-satu-primary"
-                    >
-                      <option value="medis">Medis</option>
-                      <option value="non-medis">Non-Medis</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest mb-1.5">Role</label>
-                    <select 
-                      value={formData.role || ''} required
-                      onChange={(e) => setFormData({...formData, role: e.target.value})}
-                      className="w-full px-4 py-2.5 border rounded-xl bg-gray-50 outline-none text-sm focus:border-satu-primary focus:ring-1 focus:ring-satu-primary"
-                    >
-                      <option value="">Pilih Role...</option>
-                      {formData.category === 'medis' ? (
-                        <>
-                          <option value="Dokter Umum">Dokter Umum</option>
-                          <option value="Dokter Spesialis">Dokter Spesialis</option>
-                          <option value="Perawat">Perawat</option>
-                          <option value="Bidan">Bidan</option>
-                        </>
-                      ) : (
-                        <>
-                          <option value="Admin Faskes">Admin Faskes</option>
-                          <option value="Pendaftaran">Pendaftaran</option>
-                          <option value="Kasir">Kasir</option>
-                          <option value="IT Support">IT Support</option>
-                        </>
-                      )}
-                    </select>
-                  </div>
-                </div>
+
                 <div className="pt-4 flex justify-end gap-3">
                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-50">
                     Batal

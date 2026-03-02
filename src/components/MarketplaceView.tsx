@@ -30,7 +30,7 @@ export default function MarketplaceView({ onBack, activeAddOns, onToggleAddOn }:
   const [selectedAddOn, setSelectedAddOn] = useState<AddOn | null>(null);
   const [subscriptionDuration, setSubscriptionDuration] = useState('Bulanan');
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState<AddOn | null>(null);
-  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successType, setSuccessType] = useState<'activation' | 'deactivation' | null>(null);
 
   const addOns: AddOn[] = [
     {
@@ -136,7 +136,7 @@ export default function MarketplaceView({ onBack, activeAddOns, onToggleAddOn }:
     if (selectedAddOn) {
       onToggleAddOn(selectedAddOn.title);
       setSelectedAddOn(null);
-      setShowSuccessModal(true);
+      setSuccessType('activation');
     }
   };
 
@@ -144,6 +144,7 @@ export default function MarketplaceView({ onBack, activeAddOns, onToggleAddOn }:
     if (showDeactivateConfirm) {
       onToggleAddOn(showDeactivateConfirm.title);
       setShowDeactivateConfirm(null);
+      setSuccessType('deactivation');
     }
   };
 
@@ -376,7 +377,7 @@ export default function MarketplaceView({ onBack, activeAddOns, onToggleAddOn }:
 
       {/* Success Modal */}
       <AnimatePresence>
-        {showSuccessModal && (
+        {successType && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 20 }}
@@ -384,23 +385,35 @@ export default function MarketplaceView({ onBack, activeAddOns, onToggleAddOn }:
               exit={{ opacity: 0, scale: 0.95, y: 20 }}
               className="bg-white rounded-3xl p-8 max-w-sm w-full shadow-2xl flex flex-col items-center text-center"
             >
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center text-green-500 mb-6">
+              <div className={`w-20 h-20 rounded-full flex items-center justify-center mb-6 ${
+                successType === 'activation' ? 'bg-green-100 text-green-500' : 'bg-gray-100 text-gray-500'
+              }`}>
                 <CheckCircle className="w-10 h-10" />
               </div>
               
-              <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">Berhasil Aktif!</h2>
+              <h2 className="text-2xl font-display font-bold text-gray-900 mb-2">
+                {successType === 'activation' ? 'Berhasil Aktif!' : 'Modul Dinonaktifkan'}
+              </h2>
               <p className="text-sm text-gray-500 mb-8">
-                Modul telah ditambahkan ke dashboard Anda.
+                {successType === 'activation' 
+                  ? 'Modul telah ditambahkan ke dashboard Anda.' 
+                  : 'Modul telah berhasil dinonaktifkan dari dashboard.'}
               </p>
 
               <button 
                 onClick={() => {
-                  setShowSuccessModal(false);
-                  onBack();
+                  setSuccessType(null);
+                  if (successType === 'activation') {
+                    onBack();
+                  }
                 }}
-                className="w-full py-3.5 bg-[#01315F] hover:bg-[#00284d] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-900/20 transition-all active:scale-95"
+                className={`w-full py-3.5 text-white font-bold text-sm rounded-xl shadow-lg transition-all active:scale-95 ${
+                  successType === 'activation' 
+                    ? 'bg-[#01315F] hover:bg-[#00284d] shadow-blue-900/20' 
+                    : 'bg-gray-600 hover:bg-gray-700 shadow-gray-900/20'
+                }`}
               >
-                Buka Dashboard
+                {successType === 'activation' ? 'Buka Dashboard' : 'Tutup'}
               </button>
             </motion.div>
           </div>

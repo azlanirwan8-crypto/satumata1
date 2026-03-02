@@ -13,37 +13,24 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
-interface MasterDataViewProps {
-  onBack: () => void;
-}
+import { MasterItem } from './SuperAdminDashboard';
 
 type MasterCategory = 'roles' | 'faskes-types' | 'specializations' | 'document-types' | 'employee-status';
 
-interface MasterItem {
-  id: string;
-  name: string;
-  code?: string;
-  description?: string;
-  status: 'Active' | 'Inactive';
-  meta?: any;
+interface MasterDataViewProps {
+  onBack: () => void;
+  roles: MasterItem[];
+  onUpdateRoles: (roles: MasterItem[]) => void;
 }
 
-export default function MasterDataView({ onBack }: MasterDataViewProps) {
+export default function MasterDataView({ onBack, roles, onUpdateRoles }: MasterDataViewProps) {
   const [activeCategory, setActiveCategory] = useState<MasterCategory>('roles');
   const [searchTerm, setSearchTerm] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MasterItem | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
-  // Mock Data
-  const [roles, setRoles] = useState<MasterItem[]>([
-    { id: '1', name: 'Super Admin', code: 'SA', description: 'Full access to all system modules', status: 'Active' },
-    { id: '2', name: 'Admin Faskes', code: 'AF', description: 'Manage facility specific data', status: 'Active' },
-    { id: '3', name: 'Dokter Spesialis', code: 'DS', description: 'Medical staff with specialization', status: 'Active' },
-    { id: '4', name: 'Perawat', code: 'NR', description: 'Nursing staff', status: 'Active' },
-    { id: '5', name: 'Verifikator', code: 'VF', description: 'Verify documents and claims', status: 'Active' },
-  ]);
-
+  // Mock Data for other categories
   const [faskesTypes, setFaskesTypes] = useState<MasterItem[]>([
     { id: '1', name: 'Rumah Sakit Umum', code: 'RSU', description: 'General Hospital', status: 'Active' },
     { id: '2', name: 'Klinik Utama', code: 'KLU', description: 'Main Clinic', status: 'Active' },
@@ -111,12 +98,16 @@ export default function MasterDataView({ onBack }: MasterDataViewProps) {
       status: 'Active'
     };
 
-    const updateState = (setter: React.Dispatch<React.SetStateAction<MasterItem[]>>) => {
-      setter(prev => editingItem ? prev.map(i => i.id === editingItem.id ? newItem : i) : [newItem, ...prev]);
+    const updateState = (setter: React.Dispatch<React.SetStateAction<MasterItem[]>> | ((items: MasterItem[]) => void)) => {
+      if (activeCategory === 'roles') {
+        onUpdateRoles(editingItem ? roles.map(i => i.id === editingItem.id ? newItem : i) : [newItem, ...roles]);
+      } else {
+        (setter as React.Dispatch<React.SetStateAction<MasterItem[]>>)(prev => editingItem ? prev.map(i => i.id === editingItem.id ? newItem : i) : [newItem, ...prev]);
+      }
     };
 
     switch (activeCategory) {
-      case 'roles': updateState(setRoles); break;
+      case 'roles': updateState(onUpdateRoles); break;
       case 'faskes-types': updateState(setFaskesTypes); break;
       case 'specializations': updateState(setSpecializations); break;
       case 'document-types': updateState(setDocTypes); break;
@@ -130,12 +121,16 @@ export default function MasterDataView({ onBack }: MasterDataViewProps) {
   const handleDelete = () => {
     if (!confirmDeleteId) return;
 
-    const updateState = (setter: React.Dispatch<React.SetStateAction<MasterItem[]>>) => {
-      setter(prev => prev.filter(i => i.id !== confirmDeleteId));
+    const updateState = (setter: React.Dispatch<React.SetStateAction<MasterItem[]>> | ((items: MasterItem[]) => void)) => {
+      if (activeCategory === 'roles') {
+        onUpdateRoles(roles.filter(i => i.id !== confirmDeleteId));
+      } else {
+        (setter as React.Dispatch<React.SetStateAction<MasterItem[]>>)(prev => prev.filter(i => i.id !== confirmDeleteId));
+      }
     };
 
     switch (activeCategory) {
-      case 'roles': updateState(setRoles); break;
+      case 'roles': updateState(onUpdateRoles); break;
       case 'faskes-types': updateState(setFaskesTypes); break;
       case 'specializations': updateState(setSpecializations); break;
       case 'document-types': updateState(setDocTypes); break;

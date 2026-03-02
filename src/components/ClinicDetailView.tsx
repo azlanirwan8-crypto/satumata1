@@ -24,18 +24,29 @@ import { Clinic } from './ClinicManagementView';
 interface ClinicDetailViewProps {
   clinic: Clinic;
   onBack: () => void;
+  onSaveBranch?: (parentId: string, data: any) => void;
 }
 
-type DetailTab = 'profil' | 'cabang' | 'akun' | 'paket' | 'tagihan' | 'modul';
+type DetailTab = 'profil' | 'cabang' | 'akun' | 'paket' | 'tagihan' | 'pajak' | 'modul';
 
-export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewProps) {
+export default function ClinicDetailView({ clinic, onBack, onSaveBranch }: ClinicDetailViewProps) {
   const [activeTab, setActiveTab] = useState<DetailTab>('profil');
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [configModulName, setConfigModulName] = useState('');
+  const [isAddBranchModalOpen, setIsAddBranchModalOpen] = useState(false);
+  const [branchFormData, setBranchFormData] = useState({ name: '', code: '', phone: '', address: '', pic: '', email: '' });
 
   const openConfigModul = (name: string) => {
     setConfigModulName(name);
     setIsConfigModalOpen(true);
+  };
+
+  const handleAddBranch = () => {
+    if (onSaveBranch) {
+      onSaveBranch(clinic.id, branchFormData);
+      setIsAddBranchModalOpen(false);
+      setBranchFormData({ name: '', code: '', phone: '', address: '', pic: '', email: '' });
+    }
   };
 
   const renderTabContent = () => {
@@ -90,9 +101,12 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
             <div className="flex justify-between items-center mb-6 border-b pb-4">
               <div>
                 <h2 className="font-display text-lg font-bold text-gray-800">Manajemen Fasilitas Cabang</h2>
-                <p className="text-xs text-gray-500 mt-1">EMR Pasien tergabung dengan pusat, namun antrean dan farmasi dikelola terpisah.</p>
+                <p className="text-xs text-gray-500 mt-1">Kelola data cabang dan rincian biaya Add-on (tambahan) per cabang.</p>
               </div>
-              <button className="px-4 py-2 bg-satu-primary text-white text-xs font-bold rounded-lg hover:bg-satu-dark transition-colors shadow-sm flex items-center gap-2">
+              <button 
+                onClick={() => setIsAddBranchModalOpen(true)}
+                className="px-4 py-2 bg-satu-primary text-white text-xs font-bold rounded-lg hover:bg-satu-dark transition-colors shadow-sm flex items-center gap-2"
+              >
                 <PlusCircle className="w-4 h-4" /> Tambah Cabang
               </button>
             </div>
@@ -102,23 +116,43 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
                   <tr>
                     <th className="px-4 py-3">Nama Cabang</th>
                     <th className="px-4 py-3">Lokasi / Kota</th>
+                    <th className="px-4 py-3">Rincian Add-on Paket</th>
                     <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-bold text-gray-800">Cabang Depok <span className="block text-[10px] text-gray-400 font-normal font-mono mt-0.5">ID: K-00342</span></td>
-                    <td className="px-4 py-3 text-xs">Kota Depok, Jawa Barat</td>
-                    <td className="px-4 py-3 text-center"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Aktif</span></td>
-                    <td className="px-4 py-3 text-center"><button className="text-satu-primary hover:underline text-xs font-bold">Kelola</button></td>
-                  </tr>
-                  <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-bold text-gray-800">Cabang Bekasi <span className="block text-[10px] text-gray-400 font-normal font-mono mt-0.5">ID: K-00345</span></td>
-                    <td className="px-4 py-3 text-xs">Kota Bekasi, Jawa Barat</td>
-                    <td className="px-4 py-3 text-center"><span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Verifikasi</span></td>
-                    <td className="px-4 py-3 text-center"><button className="text-satu-primary hover:underline text-xs font-bold">Kelola</button></td>
-                  </tr>
+                  {clinic.branches && clinic.branches.length > 0 ? (
+                    clinic.branches.map((branch) => (
+                      <tr key={branch.id} className="hover:bg-gray-50 transition-colors">
+                        <td className="px-4 py-3 font-bold text-gray-800">
+                          {branch.name} 
+                          <span className="block text-[10px] text-gray-400 font-normal font-mono mt-0.5">ID: {branch.code}</span>
+                        </td>
+                        <td className="px-4 py-3 text-xs">{branch.location}</td>
+                        <td className="px-4 py-3 text-xs">
+                          <div className="font-bold text-satu-primary">Rp 500.000 / bln</div>
+                          <div className="text-[10px] text-gray-500">Ditagihkan ke Induk</div>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-1 rounded text-[10px] font-bold uppercase ${
+                            branch.accountStatus === 'Verified' ? 'bg-green-100 text-green-700' : 'bg-orange-100 text-orange-700'
+                          }`}>
+                            {branch.accountStatus === 'Verified' ? 'Aktif' : 'Verifikasi'}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <button className="text-satu-primary hover:underline text-xs font-bold">Kelola</button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="px-4 py-8 text-center text-gray-400 italic">
+                        Belum ada data cabang.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
@@ -170,17 +204,17 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Paket Aktif</label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none font-bold text-satu-primary bg-white">
+                  <select defaultValue="Pro" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none font-bold text-satu-primary bg-white">
                     <option>Starter</option>
-                    <option selected>Pro</option>
+                    <option>Pro</option>
                     <option>Enterprise</option>
                   </select>
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-gray-500 uppercase mb-2">Siklus Penagihan</label>
-                  <select className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none bg-white">
+                  <select defaultValue="Tahunan (Annually)" className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none bg-white">
                     <option>Bulanan (Monthly)</option>
-                    <option selected>Tahunan (Annually)</option>
+                    <option>Tahunan (Annually)</option>
                   </select>
                 </div>
                 <div>
@@ -224,31 +258,96 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
         return (
           <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
             <div className="flex justify-between items-center mb-6 border-b pb-4">
-              <h2 className="font-display text-lg font-bold text-gray-800">Histori Tagihan (Invoices)</h2>
+              <div>
+                <h2 className="font-display text-lg font-bold text-gray-800">Manajemen Tagihan & Pembayaran</h2>
+                <p className="text-xs text-gray-500 mt-1">Kelola tagihan berjalan dan histori pembayaran untuk faskes induk beserta cabangnya.</p>
+              </div>
               <button className="px-4 py-2 bg-gray-100 text-gray-700 text-xs font-bold rounded-lg hover:bg-gray-200 transition-colors flex items-center gap-1">
-                <Plus className="w-3 h-3" /> Buat Invoice
+                <Plus className="w-3 h-3" /> Buat Invoice Manual
+              </button>
+            </div>
+
+            {/* Sub-tabs Tagihan */}
+            <div className="flex gap-4 border-b border-gray-200 mb-6">
+              <button className="pb-2 text-sm font-bold border-b-2 border-satu-primary text-satu-primary px-2 transition-all">Tagihan Aktif (Bulan Ini)</button>
+              <button className="pb-2 text-sm font-bold border-b-2 border-transparent text-gray-500 hover:text-gray-700 px-2 transition-all">Histori Pembayaran</button>
+            </div>
+
+            <div className="space-y-6">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl p-5 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div>
+                  <p className="text-xs font-bold text-blue-800 uppercase tracking-widest mb-1">Total Tagihan Dipilih</p>
+                  <h3 className="font-display text-3xl font-bold text-satu-dark">Rp 3.330.000</h3>
+                  <p className="text-[10px] text-gray-500 mt-1">Pilih rincian di bawah untuk melakukan pembayaran.</p>
+                </div>
+                <div className="flex gap-2 w-full md:w-auto">
+                  <button className="flex-1 md:flex-none px-6 py-3 bg-white border border-satu-primary text-satu-primary rounded-xl text-sm font-bold shadow-sm hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+                    <Receipt className="w-4 h-4" /> Unduh Invoice
+                  </button>
+                  <button className="flex-1 md:flex-none px-6 py-3 bg-satu-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-satu-dark transition-colors flex items-center justify-center gap-2">
+                    Bayar Terpilih (3)
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="border border-gray-200 rounded-xl overflow-hidden bg-white shadow-sm transition-all hover:border-satu-primary">
+                  <div className="bg-gray-50 px-4 py-3 border-b border-gray-200 flex items-center gap-3">
+                    <input type="checkbox" defaultChecked className="w-5 h-5 text-satu-primary rounded border-gray-300" />
+                    <label className="font-bold text-sm text-gray-800 flex-1">Tagihan Induk: {clinic.name}</label>
+                    <span className="font-bold text-gray-900 font-mono">Rp 2.220.000</span>
+                  </div>
+                  <div className="p-4 text-xs text-gray-600 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span>Paket Langganan "Pro" (Bulanan)</span>
+                      <span className="font-medium">Rp 1.500.000</span>
+                    </div>
+                    <div className="flex justify-between items-center text-orange-700">
+                      <span>Overage: Kelebihan Kuota (+10 User)</span>
+                      <span className="font-medium">Rp 500.000</span>
+                    </div>
+                    <div className="flex justify-between items-center border-t border-gray-100 pt-3 text-gray-400">
+                      <span>PPN (11%)</span>
+                      <span>Rp 220.000</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      case 'pajak':
+        return (
+          <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100">
+            <div className="flex justify-between items-center mb-6 border-b pb-4">
+              <div>
+                <h2 className="font-display text-lg font-bold text-gray-800">Dokumen Faktur Pajak</h2>
+                <p className="text-xs text-gray-500 mt-1">Daftar e-Faktur yang diterbitkan untuk setiap pembayaran.</p>
+              </div>
+              <button className="px-4 py-2 bg-satu-primary text-white text-xs font-bold rounded-lg hover:bg-satu-dark transition-colors shadow-sm flex items-center gap-2">
+                <PlusCircle className="w-4 h-4" /> Upload Faktur Manual
               </button>
             </div>
             <div className="overflow-x-auto border border-gray-100 rounded-xl">
               <table className="w-full text-sm text-left text-gray-600">
                 <thead className="bg-gray-50 text-xs text-gray-500 uppercase">
                   <tr>
-                    <th className="px-4 py-3">No. Invoice</th>
-                    <th className="px-4 py-3">Tanggal</th>
-                    <th className="px-4 py-3">Rincian Paket & Add-ons</th>
-                    <th className="px-4 py-3">Nominal</th>
+                    <th className="px-4 py-3">No. Seri Faktur Pajak (NSFP)</th>
+                    <th className="px-4 py-3">Masa Pajak</th>
+                    <th className="px-4 py-3 text-right">DPP</th>
+                    <th className="px-4 py-3 text-right">PPN (11%)</th>
                     <th className="px-4 py-3 text-center">Status</th>
                     <th className="px-4 py-3 text-center">Aksi</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   <tr className="hover:bg-gray-50 transition-colors">
-                    <td className="px-4 py-3 font-mono font-bold text-satu-primary text-xs">INV-25-06-001</td>
-                    <td className="px-4 py-3 text-xs">01 Jun 2025</td>
-                    <td className="px-4 py-3 text-xs text-gray-500">Base Pro + 2 Cabang Ext.</td>
-                    <td className="px-4 py-3 font-bold">Rp 2.500.000</td>
-                    <td className="px-4 py-3 text-center"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Lunas</span></td>
-                    <td className="px-4 py-3 text-center"><button className="text-blue-500 hover:underline text-xs font-bold">Unduh PDF</button></td>
+                    <td className="px-4 py-4 font-mono font-bold text-gray-800 text-xs">010.000-26.12345678</td>
+                    <td className="px-4 py-4 text-xs">Mei 2026</td>
+                    <td className="px-4 py-4 text-right text-gray-500">Rp 2.252.252</td>
+                    <td className="px-4 py-4 font-bold text-right text-gray-800">Rp 247.748</td>
+                    <td className="px-4 py-4 text-center"><span className="bg-green-100 text-green-700 px-2 py-1 rounded text-[10px] font-bold uppercase">Terbit</span></td>
+                    <td className="px-4 py-4 text-center"><button className="text-satu-primary hover:underline text-xs font-bold flex items-center justify-center gap-1 mx-auto"><Printer className="w-3 h-3" /> Cetak</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -364,14 +463,6 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
             <h1 className="font-display font-bold text-2xl text-satu-dark">{clinic.name}</h1>
           </div>
         </div>
-        <div className="flex gap-2">
-          <button className="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-xl text-xs font-bold hover:bg-gray-50 shadow-sm flex items-center gap-2">
-            <Printer className="w-4 h-4" /> Cetak Profil
-          </button>
-          <button className="px-5 py-2 bg-satu-primary text-white rounded-xl text-xs font-bold hover:bg-satu-dark shadow-md flex items-center gap-2">
-            <Save className="w-4 h-4" /> Simpan
-          </button>
-        </div>
       </div>
 
       {/* Detail Layout */}
@@ -393,7 +484,10 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
               <span className="flex items-center gap-3"><PackageCheck className="w-4 h-4" /> Paket & Kuota</span>
             </button>
             <button onClick={() => setActiveTab('tagihan')} className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${activeTab === 'tagihan' ? 'bg-blue-50 text-satu-primary font-bold border-l-4 border-satu-primary rounded-l-none' : 'text-gray-600 hover:bg-gray-50'}`}>
-              <span className="flex items-center gap-3"><Receipt className="w-4 h-4" /> Histori Tagihan</span>
+              <span className="flex items-center gap-3"><Receipt className="w-4 h-4" /> Tagihan & Pembayaran</span>
+            </button>
+            <button onClick={() => setActiveTab('pajak')} className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${activeTab === 'pajak' ? 'bg-blue-50 text-satu-primary font-bold border-l-4 border-satu-primary rounded-l-none' : 'text-gray-600 hover:bg-gray-50'}`}>
+              <span className="flex items-center gap-3"><PlusCircle className="w-4 h-4" /> Faktur Pajak</span>
             </button>
             <button onClick={() => setActiveTab('modul')} className={`w-full flex items-center justify-between px-4 py-3 text-sm rounded-lg transition-all ${activeTab === 'modul' ? 'bg-blue-50 text-satu-primary font-bold border-l-4 border-satu-primary rounded-l-none' : 'text-gray-600 hover:bg-gray-50'}`}>
               <span className="flex items-center gap-3"><Layers className="w-4 h-4" /> Aktivasi Modul</span>
@@ -453,6 +547,103 @@ export default function ClinicDetailView({ clinic, onBack }: ClinicDetailViewPro
                 <button onClick={() => setIsConfigModalOpen(false)} className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors">Batal</button>
                 <button onClick={() => setIsConfigModalOpen(false)} className="px-6 py-2.5 bg-satu-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-satu-dark transition-colors flex items-center gap-2">
                   <Save className="w-4 h-4" /> Simpan Konfigurasi
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Add Branch Modal */}
+      <AnimatePresence>
+        {isAddBranchModalOpen && (
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden flex flex-col max-h-[90vh]"
+            >
+              <div className="px-6 py-5 border-b bg-gray-50 flex justify-between items-center shrink-0">
+                <div>
+                  <h3 className="text-lg font-display font-bold text-satu-dark">Pendaftaran Cabang Baru</h3>
+                  <p className="text-xs text-gray-500 mt-1">Induk: <span className="font-bold text-gray-800">{clinic.name}</span></p>
+                </div>
+                <button onClick={() => setIsAddBranchModalOpen(false)} className="p-2 rounded-full hover:bg-gray-200 transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto custom-scroll p-6 bg-white">
+                <div className="bg-blue-50/50 p-4 border border-blue-100 rounded-xl mb-6 text-xs text-blue-800 leading-relaxed">
+                  <i className="inline-block mr-1"><Network className="w-3 h-3" /></i> Cabang baru akan berbagi database EMR (Rekam Medis) dengan Faskes Induk. Penagihan biaya langganan tambahan untuk cabang ini akan <b>digabungkan ke dalam Invoice Induk</b> pada bulan berjalan.
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Nama Lengkap Cabang <span className="text-red-500">*</span></label>
+                    <input 
+                      type="text" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none text-sm font-bold text-gray-800" 
+                      placeholder="Contoh: Klinik Mata Nusantara Cab. Bogor" 
+                      value={branchFormData.name}
+                      onChange={(e) => setBranchFormData({...branchFormData, name: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Kode Kemenkes Cabang</label>
+                    <input 
+                      type="text" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none font-mono text-sm" 
+                      placeholder="Opsional" 
+                      value={branchFormData.code}
+                      onChange={(e) => setBranchFormData({...branchFormData, code: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Nomor Telepon Cabang</label>
+                    <input 
+                      type="tel" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none text-sm" 
+                      placeholder="0251-xxxxxx" 
+                      value={branchFormData.phone}
+                      onChange={(e) => setBranchFormData({...branchFormData, phone: e.target.value})}
+                    />
+                  </div>
+                  <div className="md:col-span-2">
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Alamat Lengkap Cabang</label>
+                    <textarea 
+                      rows={2} 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none text-sm"
+                      value={branchFormData.address}
+                      onChange={(e) => setBranchFormData({...branchFormData, address: e.target.value})}
+                    ></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Nama Penanggung Jawab Cabang</label>
+                    <input 
+                      type="text" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none text-sm" 
+                      placeholder="Kepala Cabang" 
+                      value={branchFormData.pic}
+                      onChange={(e) => setBranchFormData({...branchFormData, pic: e.target.value})}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 mb-2">Email Akun Admin Cabang <span className="text-red-500">*</span></label>
+                    <input 
+                      type="email" 
+                      className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-satu-primary/20 outline-none text-sm" 
+                      placeholder="admin.bogor@matanusantara.com" 
+                      value={branchFormData.email}
+                      onChange={(e) => setBranchFormData({...branchFormData, email: e.target.value})}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="px-6 py-4 border-t bg-gray-50 flex justify-end gap-3 shrink-0">
+                <button onClick={() => setIsAddBranchModalOpen(false)} className="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-100 transition-colors">Batal</button>
+                <button onClick={handleAddBranch} className="px-6 py-2.5 bg-satu-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-satu-dark transition-colors flex items-center gap-2">
+                  <PlusCircle className="w-4 h-4" /> Simpan Cabang
                 </button>
               </div>
             </motion.div>

@@ -14,12 +14,13 @@ export interface Employee {
   id: string;
   name: string;
   nip: string;
+  nik?: string;
   profession: string;
   jobTitle: string;
   category: 'medis' | 'non-medis';
   status: string;
   img: string;
-  email: string;
+  email: string; // System email (username)
   phone: string;
   str?: string;
   strExp?: string;
@@ -37,6 +38,36 @@ export interface Employee {
   expYears: string;
   npwp: string;
   emailPersonal: string;
+  // New fields for linked user
+  password?: string;
+  roles?: string[];
+  // Education & Experience
+  education?: Array<{ level: string; univ: string; year: string }>;
+  experience?: Array<{ role: string; instansi: string; thn: string }>;
+  // RKK & Schedule (Medical only)
+  rkk?: Array<{ action: string; category: string; status: string }>;
+  schedule?: Record<string, { active: boolean; slots: Array<{ start: string; end: string }> }>;
+  // Training & SKP
+  training?: Array<{ name: string; date: string; skp: string }>;
+  mandatoryTraining?: Record<string, string>;
+  // Salary & Bank
+  gajiPokok?: string;
+  tunjanganTetap?: string;
+  tunjanganTidakTetap?: string;
+  insentif?: string;
+  bonus?: string;
+  komisi?: string;
+  benefit?: string;
+  fasilitas?: string;
+  // Jasmed
+  jasmedScheme?: 'fee' | 'point';
+  jasmedItems?: Array<{ action: string; qty: number; rate: number }>;
+  jasmedPoin?: string;
+  jasmedRatePoin?: string;
+  // Bank
+  bank?: string;
+  noRek?: string;
+  atasNama?: string;
 }
 
 interface EmployeeDirectoryViewProps {
@@ -99,7 +130,7 @@ export default function EmployeeDirectoryView({
         </div>
       )}
 
-      <div className="px-8 py-4 flex flex-wrap gap-4 items-center bg-gray-50/50 border-b border-gray-200 shrink-0">
+      <div className="px-8 py-4 flex flex-wrap gap-4 items-center justify-between bg-gray-50/50 border-b border-gray-200 shrink-0">
         <div className="relative w-full md:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
@@ -113,6 +144,15 @@ export default function EmployeeDirectoryView({
             className="w-full pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:border-satu-primary"
           />
         </div>
+        {hideHeader && (
+          <button 
+            onClick={onAddEmployee}
+            className="flex items-center gap-2 bg-satu-primary hover:bg-satu-dark text-white font-semibold text-sm px-5 py-2.5 rounded-xl shadow-lg hover:shadow-blue-500/30 transition-all active:scale-95"
+          >
+            <PlusCircle className="w-5 h-5" />
+            <span>Tambah Pegawai</span>
+          </button>
+        )}
       </div>
 
       <div className="flex-1 overflow-auto custom-scroll px-8 pb-8">
